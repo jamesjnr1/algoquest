@@ -1,5 +1,6 @@
 const TRACKS = [
   { id: 'dsa', label: 'DSA Isle', tagClass: 'dsa', levels: DSA_LEVELS, blurb: 'Data structures and algorithms, learned by pushing, popping, inserting, and searching things yourself.' },
+  { id: 'py', label: 'Python Lab', tagClass: 'py', levels: CODE_LEVELS, blurb: 'The same core algorithms, but now you write real Python. Every level runs your code against automated tests and tells you exactly what passed or failed.' },
   { id: 'r', label: 'R Harbor', tagClass: 'r', levels: R_LEVELS, blurb: 'R fundamentals, learned by building vectors, subsetting data, and querying data frames yourself.' },
 ];
 
@@ -11,6 +12,9 @@ function levelsForTrack(trackId) {
 }
 function trackMeta(trackId) {
   return TRACKS.find((t) => t.id === trackId);
+}
+function trackColorVar(trackId) {
+  return `var(--${trackMeta(trackId).tagClass}-color)`;
 }
 function isUnlocked(trackId, idx) {
   if (idx === 0) return true;
@@ -113,7 +117,7 @@ function renderDashboard(content) {
   const hero = h('div', { class: 'hero' });
   hero.appendChild(h('h1', {}, resume ? 'Ready to keep learning?' : 'You\'ve completed every level!'));
   hero.appendChild(h('p', {}, resume
-    ? 'Pick up right where you left off, or browse a world on the left. Every level is a short, hands-on challenge with a quick check at the end.'
+    ? 'Pick up right where you left off, or browse a world on the left. DSA Isle and R Harbor teach by interacting; Python Lab has you write real Python that gets graded automatically, right or wrong.'
     : 'Both DSA Isle and R Harbor are fully cleared. Replay any level any time — or tell your dev to add more.'));
   const btnRow = h('div', { class: 'btn-row' });
   if (resume) {
@@ -162,7 +166,7 @@ function renderDashboard(content) {
     const lvl = t.levels[resume.idx];
     const done = t.levels.filter((l) => Store.isComplete(l.id)).length;
     const card = h('div', { class: 'continue-card' });
-    card.appendChild(h('div', { class: 'continue-swatch', style: `background:${resume.trackId === 'dsa' ? 'var(--dsa-color)' : 'var(--r-color)'}` }));
+    card.appendChild(h('div', { class: 'continue-swatch', style: `background:${trackColorVar(resume.trackId)}` }));
     const body = h('div', { class: 'continue-body' });
     body.appendChild(h('span', { class: 'tag ' + t.tagClass }, t.label));
     body.appendChild(h('h3', {}, lvl.title));

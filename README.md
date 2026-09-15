@@ -1,23 +1,18 @@
 # AlgoQuest
 
-A tiny browser game for learning **Data Structures & Algorithms** and **R** from scratch, before the semester starts. No build step, no accounts, no server — it's plain HTML/CSS/JS that saves your progress in the browser.
+A browser-based way to learn **Data Structures & Algorithms**, **Python**, and **R** from scratch, before the semester starts. No build step, no accounts, no server — plain HTML/CSS/JS that saves your progress in the browser. Python code runs for real, in-browser, via [Pyodide](https://pyodide.org/) (CPython compiled to WebAssembly).
 
-Instead of just reading theory, each level puts you in the loop:
+Three tracks, three ways of learning by doing:
 
-- Push and pop your own stack to check whether brackets are balanced.
-- Reverse a linked list one pointer-flip at a time.
-- Build the call stack for `factorial(4)` by hand and watch it unwind.
-- Insert values into a Binary Search Tree by comparing left/right yourself.
-- Step through bubble sort and count the comparisons.
-- Play a number-guessing game that teaches binary search.
-- Explore a maze with BFS using a real frontier queue.
-- Build R vectors, subset them with 1-based indexing, query a data frame, and more.
+- **DSA Isle** — interact directly with the data structure. Push and pop your own stack to check whether brackets are balanced. Reverse a linked list one pointer-flip at a time. Build the call stack for `factorial(4)` by hand. Insert values into a BST by comparing left/right yourself. Step through bubble sort and count the comparisons. Explore a maze with BFS using a real frontier queue.
+- **Python Lab** — write actual Python and get graded. Each level gives you a starter function or class with `TODO`s; click "Run tests" and your code executes for real against a small test suite, with pass/fail feedback per test (expected vs. actual, or the real Python error if your code crashes). No plausible-looking fake grading — it's genuinely running your code.
+- **R Harbor** — predict, build, and query real R snippets: vectors, 1-based indexing, data frames, vectorized thinking.
 
-Every level ends with a two-question "Quick check" to lock in the idea, then awards XP. XP and completed levels are saved in `localStorage`, so you can close the tab and pick up where you left off.
+Every level ends with a short "Quick check" to lock in the idea, then awards XP. XP and completed levels are saved in `localStorage`, so you can close the tab and pick up where you left off.
 
 ## Play it
 
-No install needed — it's static HTML/CSS/JS.
+No install needed — it's static HTML/CSS/JS, though Python Lab needs an internet connection the first time it downloads the Python runtime (~12 MB, cached by the browser after that).
 
 - **Locally:** open `index.html` directly in your browser, or run a tiny local server from this folder, e.g. `python3 -m http.server 8000` and visit `http://localhost:8000`.
 - **GitHub Pages:** in this repo's Settings → Pages, set the source to the `main` branch, root folder. Your game will be live at the generated `github.io` URL.
@@ -36,6 +31,23 @@ No install needed — it's static HTML/CSS/JS.
 9. Graphs: Breadth-First Search
 10. Hash Tables
 
+**Python Lab** (write real code, tested automatically)
+1. Linear Search
+2. Binary Search
+3. Bubble Sort
+4. Selection Sort
+5. Merge Sort (divide and conquer)
+6. Build a Stack (class)
+7. Balanced Brackets (stack application)
+8. Build a Queue (class)
+9. Reverse a Linked List
+10. Binary Search Tree: Insert & Search
+11. Graph Traversal: BFS
+12. Graph Traversal: DFS
+13. Recursive Fibonacci
+14. Dynamic Programming: Memoized Fibonacci
+15. Build a Hash Map (chaining)
+
 **R Harbor**
 1. Variables & Vectors
 2. Vectorized Thinking
@@ -44,22 +56,26 @@ No install needed — it's static HTML/CSS/JS.
 5. Functions & Control Flow
 6. Apply Family & Quick Stats
 
+This topic list (and the ordering) is loosely modeled on the standard DSA curriculum at [tutorialspoint.com/data_structures_algorithms](https://www.tutorialspoint.com/data_structures_algorithms/index.htm), scoped down to the core topics a first course actually needs. That tutorial goes much further (AVL/Red-Black/B-Trees, Dijkstra, greedy algorithms, 0/1 knapsack, tries, disjoint sets, and more) — a good next stop once these fundamentals feel solid.
+
 Levels within each track unlock in order, so the ideas build on each other. Progress is per-browser (not synced anywhere), so use the same browser/device to keep your streak.
 
 ## Project structure
 
 ```
-index.html          shell + layout
-css/style.css        all styling
-js/engine.js         save/load state, XP & rank logic
-js/components.js      small DOM helpers (quiz renderer, reorder challenge, code blocks)
-js/dsa-levels.js      the 10 DSA levels
-js/r-levels.js        the 6 R levels
-js/app.js             navigation, level rendering, XP/quiz flow
+index.html            shell + layout, loads Pyodide from jsdelivr's CDN
+css/style.css          all styling
+js/engine.js           save/load state, XP, rank, streak logic
+js/components.js       small DOM helpers (quiz renderer, reorder challenge, code blocks)
+js/pyrunner.js         Pyodide loader + Python test runner + code-editor UI component
+js/dsa-levels.js       the 10 DSA Isle levels
+js/code-levels.js      the 15 Python Lab levels
+js/r-levels.js         the 6 R Harbor levels
+js/app.js              navigation (dashboard/track/level), XP/quiz flow
 ```
 
-To add a level, push an object with `{ id, track, title, concept, xp, intro, mount(root, onTaskDone), quiz }` onto `DSA_LEVELS` or `R_LEVELS`.
+To add an interactive DSA/R level, push an object with `{ id, track, title, concept, xp, intro, mount(root, onTaskDone), quiz }` onto `DSA_LEVELS` or `R_LEVELS`. To add a Python Lab level, push `{ id, track: 'py', title, concept, xp, intro, starterCode, tests: [{ description, code }], mount, quiz }` onto `CODE_LEVELS` — `mount` just needs to call `renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone)`. Each test's `code` is a Python snippet that should raise `AssertionError` on failure; the runner reports pass/fail/error per test.
 
 ## Why this approach
 
-Neither DSA nor R clicks from reading alone — both are muscle-memory subjects. This game keeps every explanation short and puts the mechanics (shifting an array, chaining a hash collision, subsetting a vector) in your hands immediately, so the theory has something to attach to before the semester's pace picks up.
+Neither DSA, Python, nor R clicks from reading alone — they're muscle-memory subjects. This app keeps every explanation short and puts the mechanics (shifting an array, chaining a hash collision, writing and running actual code, subsetting a vector) in your hands immediately, so the theory has something to attach to before the semester's pace picks up.
