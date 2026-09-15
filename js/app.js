@@ -1,90 +1,253 @@
 const TRACKS = [
-  { id: 'dsa', label: '🧩 DSA Isle', levels: DSA_LEVELS },
-  { id: 'r', label: '📊 R Harbor', levels: R_LEVELS },
+  { id: 'dsa', label: 'DSA Isle', tagClass: 'dsa', levels: DSA_LEVELS, blurb: 'Data structures and algorithms, learned by pushing, popping, inserting, and searching things yourself.' },
+  { id: 'r', label: 'R Harbor', tagClass: 'r', levels: R_LEVELS, blurb: 'R fundamentals, learned by building vectors, subsetting data, and querying data frames yourself.' },
 ];
 
-let currentTrack = 'dsa';
+let view = { type: 'dashboard' };
+let searchQuery = '';
 
 function levelsForTrack(trackId) {
   return TRACKS.find((t) => t.id === trackId).levels;
 }
-
+function trackMeta(trackId) {
+  return TRACKS.find((t) => t.id === trackId);
+}
 function isUnlocked(trackId, idx) {
   if (idx === 0) return true;
   const levels = levelsForTrack(trackId);
   return Store.isComplete(levels[idx - 1].id);
 }
-
-function totalXp() {
-  return TRACKS.reduce((sum, t) => sum + t.levels.reduce((s, l) => s + l.xp, 0), 0);
+function totalLevelCount() {
+  return TRACKS.reduce((sum, t) => sum + t.levels.length, 0);
+}
+function completedLevelCount() {
+  return TRACKS.reduce((sum, t) => sum + t.levels.filter((l) => Store.isComplete(l.id)).length, 0);
+}
+function matchesSearch(level) {
+  if (!searchQuery) return true;
+  const q = searchQuery.toLowerCase();
+  return level.title.toLowerCase().includes(q) || level.concept.toLowerCase().includes(q);
 }
 
-function renderXp() {
-  const xp = Store.state.xp;
-  document.getElementById('xp-value').textContent = xp;
-  const pct = Math.min(100, Math.round((xp / totalXp()) * 100));
-  document.getElementById('xp-fill').style.width = pct + '%';
-  document.getElementById('rank-badge').textContent = rankFor(xp);
+function navigate(next) {
+  view = next;
+  renderSideNav();
+  renderContent();
+  window.scrollTo(0, 0);
 }
 
-function renderTabs() {
-  const wrap = document.getElementById('track-tabs');
-  clear(wrap);
-  TRACKS.forEach((t) => {
-    const btn = h('button', { class: 'track-tab' + (t.id === currentTrack ? ' active' : '') }, t.label);
+function renderTopChip() {
+  document.getElementById('xp-value').textContent = Store.state.xp;
+  document.getElementById('rank-badge').textContent = rankFor(Store.state.xp);
+}
+
+function renderSideNav() {
+  const nav = document.getElementById('side-nav');
+  clear(nav);
+  const items = [
+    { id: 'dashboard', label: 'Dashboard', active: view.type === 'dashboard' },
+    ...TRACKS.map((t) => ({ id: t.id, label: t.label, active: view.type !== 'dashboard' && view.trackId === t.id })),
+  ];
+  items.forEach((item) => {
+    const btn = h('button', { class: 'side-nav-item' + (item.active ? ' active' : '') }, item.label);
     btn.addEventListener('click', () => {
-      currentTrack = t.id;
-      renderTabs();
-      renderMap();
-      showWelcome();
+      searchQuery = '';
+      document.getElementById('search-input').value = '';
+      if (item.id === 'dashboard') navigate({ type: 'dashboard' });
+      else navigate({ type: 'track', trackId: item.id });
     });
-    wrap.appendChild(btn);
+    nav.appendChild(btn);
   });
 }
 
-function showWelcome() {
-  const stage = document.getElementById('stage');
-  clear(stage);
-  const track = TRACKS.find((t) => t.id === currentTrack);
-  const done = track.levels.filter((l) => Store.isComplete(l.id)).length;
-  const welcome = h('div', { class: 'welcome' });
-  welcome.appendChild(h('h1', {}, track.label));
-  welcome.appendChild(h('p', {}, `${done} of ${track.levels.length} levels complete on this track. Pick a level on the left to continue.`));
-  stage.appendChild(welcome);
+function findResume() {
+  for (const t of TRACKS) {
+    const done = t.levels.filter((l) => Store.isComplete(l.id)).length;
+    if (done > 0 && done < t.levels.length) return { trackId: t.id, idx: done };
+  }
+  for (const t of TRACKS) {
+    if (t.levels.filter((l) => Store.isComplete(l.id)).length === 0) return { trackId: t.id, idx: 0 };
+  }
+  return null;
 }
 
-function renderMap() {
-  const map = document.getElementById('level-map');
-  clear(map);
-  const track = TRACKS.find((t) => t.id === currentTrack);
-  map.appendChild(h('div', { class: 'map-heading' }, track.label));
-  track.levels.forEach((level, idx) => {
-    const unlocked = isUnlocked(currentTrack, idx);
-    const complete = Store.isComplete(level.id);
-    const card = h('div', { class: 'level-card' + (unlocked ? '' : ' locked') });
-    const top = h('div', { class: 'lc-top' });
-    top.appendChild(h('span', { class: 'lc-title' }, `${idx + 1}. ${level.title}`));
-    top.appendChild(complete ? h('span', { class: 'lc-check' }, '✓') : h('span', { class: 'lc-xp' }, `+${level.xp}xp`));
-    card.appendChild(top);
-    card.appendChild(h('div', { class: 'lc-concept' }, unlocked ? level.concept : 'Complete the level above to unlock'));
-    if (unlocked) {
-      card.addEventListener('click', () => renderLevel(currentTrack, idx));
-    }
-    map.appendChild(card);
+// ---------- Level card (shared by dashboard previews + track pages) ----------
+function levelCard(trackId, idx) {
+  const track = trackMeta(trackId);
+  const level = track.levels[idx];
+  const unlocked = isUnlocked(trackId, idx);
+  const complete = Store.isComplete(level.id);
+  const card = h('div', { class: 'lvl-card' + (unlocked ? '' : ' locked') });
+  card.appendChild(h('div', { class: 'lvl-card-top ' + track.tagClass }));
+  const body = h('div', { class: 'lvl-card-body' });
+  const tagsRow = h('div', { class: 'lvl-card-tags' });
+  tagsRow.appendChild(h('span', { class: 'tag ' + track.tagClass }, `${track.label} · ${idx + 1}`));
+  body.appendChild(tagsRow);
+  body.appendChild(h('h3', {}, level.title));
+  body.appendChild(h('div', { class: 'meta' }, unlocked ? level.concept : 'Complete the level before this one to unlock.'));
+  const footer = h('div', { class: 'lvl-card-footer' });
+  footer.appendChild(h('span', { class: 'xp' }, `+${level.xp} XP`));
+  const status = complete ? h('span', { class: 'status done' }, 'Completed ✓')
+    : unlocked ? h('span', { class: 'status start' }, 'Start →')
+    : h('span', { class: 'status locked-label' }, 'Locked');
+  footer.appendChild(status);
+  body.appendChild(footer);
+  card.appendChild(body);
+  if (unlocked) card.addEventListener('click', () => navigate({ type: 'level', trackId, idx }));
+  return card;
+}
+
+// ---------- Dashboard ----------
+function renderDashboard(content) {
+  if (searchQuery) {
+    content.appendChild(searchResults());
+    return;
+  }
+
+  const totalLevels = totalLevelCount();
+  const doneLevels = completedLevelCount();
+  const streak = currentStreak(Store.state.streakDates);
+  const resume = findResume();
+
+  // Hero
+  const hero = h('div', { class: 'hero' });
+  hero.appendChild(h('h1', {}, resume ? 'Ready to keep learning?' : 'You\'ve completed every level!'));
+  hero.appendChild(h('p', {}, resume
+    ? 'Pick up right where you left off, or browse a world on the left. Every level is a short, hands-on challenge with a quick check at the end.'
+    : 'Both DSA Isle and R Harbor are fully cleared. Replay any level any time — or tell your dev to add more.'));
+  const btnRow = h('div', { class: 'btn-row' });
+  if (resume) {
+    const resumeBtn = h('button', { class: 'btn primary' }, 'Resume last level');
+    resumeBtn.addEventListener('click', () => navigate({ type: 'level', trackId: resume.trackId, idx: resume.idx }));
+    btnRow.appendChild(resumeBtn);
+  }
+  const browseBtn = h('button', { class: 'btn' }, 'Browse all levels');
+  browseBtn.style.background = 'rgba(255,255,255,0.16)';
+  browseBtn.style.borderColor = 'rgba(255,255,255,0.4)';
+  browseBtn.style.color = 'white';
+  browseBtn.addEventListener('click', () => navigate({ type: 'track', trackId: TRACKS[0].id }));
+  btnRow.appendChild(browseBtn);
+  hero.appendChild(btnRow);
+
+  const progressWrap = h('div', { class: 'progress-line' });
+  progressWrap.appendChild(h('div', { class: 'progress-label' }, `${doneLevels} of ${totalLevels} levels complete`));
+  const track = h('div', { class: 'progress-track' });
+  track.appendChild(h('div', { class: 'progress-fill', style: `width:${Math.round((doneLevels / totalLevels) * 100)}%` }));
+  progressWrap.appendChild(track);
+  hero.appendChild(progressWrap);
+  content.appendChild(hero);
+
+  // Stats
+  const stats = h('div', { class: 'stats-row' });
+  const statDefs = [
+    { label: 'Levels Completed', value: `${doneLevels} / ${totalLevels}`, color: 'var(--accent)' },
+    { label: 'XP Earned', value: Store.state.xp, color: 'var(--warn)' },
+    { label: 'Current Rank', value: rankFor(Store.state.xp), color: 'var(--r-color)' },
+    { label: 'Day Streak', value: streak, color: 'var(--dsa-color)' },
+  ];
+  statDefs.forEach((s) => {
+    const card = h('div', { class: 'stat-card' });
+    card.appendChild(h('div', { class: 'stat-dot', style: `background:${s.color}` }));
+    card.appendChild(h('div', { class: 'stat-label' }, s.label));
+    card.appendChild(h('div', { class: 'stat-value' }, String(s.value)));
+    stats.appendChild(card);
+  });
+  content.appendChild(stats);
+
+  // Continue learning
+  const continueSection = h('div', { class: 'dashboard-section' });
+  continueSection.appendChild(h('div', { class: 'section-head' }, [h('h2', {}, 'Continue Learning')]));
+  if (resume) {
+    const t = trackMeta(resume.trackId);
+    const lvl = t.levels[resume.idx];
+    const done = t.levels.filter((l) => Store.isComplete(l.id)).length;
+    const card = h('div', { class: 'continue-card' });
+    card.appendChild(h('div', { class: 'continue-swatch', style: `background:${resume.trackId === 'dsa' ? 'var(--dsa-color)' : 'var(--r-color)'}` }));
+    const body = h('div', { class: 'continue-body' });
+    body.appendChild(h('span', { class: 'tag ' + t.tagClass }, t.label));
+    body.appendChild(h('h3', {}, lvl.title));
+    body.appendChild(h('div', { class: 'meta' }, `Next: ${lvl.concept}`));
+    const pw = h('div', { class: 'continue-progress' });
+    pw.appendChild(h('div', { class: 'continue-progress-fill', style: `width:${Math.round((done / t.levels.length) * 100)}%` }));
+    body.appendChild(pw);
+    card.appendChild(body);
+    const resumeBtn2 = h('button', { class: 'btn primary' }, 'Resume');
+    resumeBtn2.addEventListener('click', () => navigate({ type: 'level', trackId: resume.trackId, idx: resume.idx }));
+    card.appendChild(resumeBtn2);
+    continueSection.appendChild(card);
+  } else {
+    continueSection.appendChild(h('div', { class: 'empty-state' }, 'Nothing left to continue — every level is complete!'));
+  }
+  content.appendChild(continueSection);
+
+  // Track previews
+  TRACKS.forEach((t) => {
+    const section = h('div', { class: 'dashboard-section' });
+    const head = h('div', { class: 'section-head' });
+    head.appendChild(h('h2', {}, t.label));
+    const viewAll = h('button', { class: 'view-all' }, 'View all →');
+    viewAll.addEventListener('click', () => navigate({ type: 'track', trackId: t.id }));
+    head.appendChild(viewAll);
+    section.appendChild(head);
+    const grid = h('div', { class: 'card-grid' });
+    t.levels.slice(0, 3).forEach((lvl, i) => grid.appendChild(levelCard(t.id, i)));
+    section.appendChild(grid);
+    content.appendChild(section);
   });
 }
 
-function renderLevel(trackId, idx) {
-  const level = levelsForTrack(trackId)[idx];
-  Array.from(document.querySelectorAll('.level-card')).forEach((c) => c.classList.remove('active'));
-  const cards = document.getElementById('level-map').children;
-  if (cards[idx + 1]) cards[idx + 1].classList.add('active'); // +1 to skip heading
+function searchResults() {
+  const wrap = h('div', {});
+  wrap.appendChild(h('div', { class: 'section-head' }, [h('h2', {}, `Results for "${searchQuery}"`)]));
+  const grid = h('div', { class: 'card-grid' });
+  let count = 0;
+  TRACKS.forEach((t) => {
+    t.levels.forEach((lvl, i) => {
+      if (matchesSearch(lvl)) { grid.appendChild(levelCard(t.id, i)); count++; }
+    });
+  });
+  if (count === 0) wrap.appendChild(h('div', { class: 'empty-state' }, 'No levels match that search.'));
+  else wrap.appendChild(grid);
+  return wrap;
+}
 
-  const stage = document.getElementById('stage');
-  clear(stage);
+// ---------- Track page ----------
+function renderTrackPage(content, trackId) {
+  const t = trackMeta(trackId);
+  const done = t.levels.filter((l) => Store.isComplete(l.id)).length;
+
+  if (searchQuery) {
+    content.appendChild(searchResults());
+    return;
+  }
+
+  const header = h('div', { class: 'track-header' });
+  header.appendChild(h('h1', {}, t.label));
+  header.appendChild(h('p', {}, t.blurb));
+  const pt = h('div', { class: 'track-progress-track' });
+  pt.appendChild(h('div', { class: 'track-progress-fill', style: `width:${Math.round((done / t.levels.length) * 100)}%` }));
+  header.appendChild(pt);
+  header.appendChild(h('div', { class: 'track-progress-label' }, `${done} of ${t.levels.length} levels complete`));
+  content.appendChild(header);
+
+  const grid = h('div', { class: 'card-grid' });
+  t.levels.forEach((lvl, i) => grid.appendChild(levelCard(trackId, i)));
+  content.appendChild(grid);
+}
+
+// ---------- Level page ----------
+function renderLevelPage(content, trackId, idx) {
+  const t = trackMeta(trackId);
+  const level = t.levels[idx];
+
+  const back = h('button', { class: 'breadcrumb' }, `← Back to ${t.label}`);
+  back.addEventListener('click', () => navigate({ type: 'track', trackId }));
+  content.appendChild(back);
+
+  const stage = h('div', { class: 'stage' });
 
   const header = h('div', { class: 'level-header' });
-  header.appendChild(h('div', { class: 'concept-tag' }, level.concept));
+  header.appendChild(h('span', { class: 'tag ' + t.tagClass }, level.concept));
   header.appendChild(h('h2', {}, level.title));
   stage.appendChild(header);
 
@@ -107,31 +270,55 @@ function renderLevel(trackId, idx) {
     stage.appendChild(h('div', { class: 'section-title' }, 'Quick check'));
     const quizRoot = h('div', {});
     stage.appendChild(quizRoot);
-    renderQuiz(quizRoot, level.quiz, () => onQuizDone(trackId, idx, level));
+    renderQuiz(quizRoot, level.quiz, () => onQuizDone(stage, trackId, idx, level));
   }
   level.mount(taskRoot, onTaskDone);
+
+  content.appendChild(stage);
 }
 
-function onQuizDone(trackId, idx, level) {
+function onQuizDone(stage, trackId, idx, level) {
   const awarded = Store.complete(level.id, level.xp);
-  renderXp();
-  renderMap();
-  const stage = document.getElementById('stage');
+  renderTopChip();
   const banner = successBanner(awarded ? `Level complete! +${level.xp} XP` : 'Nice review! (Already completed — no extra XP)');
   const levels = levelsForTrack(trackId);
   const btnRow = h('div', { style: 'display:flex;gap:10px;' });
   if (idx + 1 < levels.length) {
     const nextBtn = h('button', { class: 'btn primary' }, 'Next level →');
-    nextBtn.addEventListener('click', () => renderLevel(trackId, idx + 1));
+    nextBtn.addEventListener('click', () => navigate({ type: 'level', trackId, idx: idx + 1 }));
     btnRow.appendChild(nextBtn);
   } else {
-    btnRow.appendChild(h('span', { class: 'hint-line' }, '🎉 Track complete!'));
+    btnRow.appendChild(h('span', { class: 'hint-line' }, 'Track complete!'));
   }
   banner.appendChild(btnRow);
   stage.appendChild(banner);
   if (awarded) showToast(`+${level.xp} XP earned!`);
 }
 
-renderTabs();
-renderMap();
-renderXp();
+// ---------- Root render ----------
+function renderContent() {
+  const content = document.getElementById('content');
+  clear(content);
+  if (view.type === 'dashboard') renderDashboard(content);
+  else if (view.type === 'track') renderTrackPage(content, view.trackId);
+  else if (view.type === 'level') renderLevelPage(content, view.trackId, view.idx);
+}
+
+document.getElementById('search-input').addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim();
+  if (view.type === 'level') view = { type: 'dashboard' };
+  renderSideNav();
+  renderContent();
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  if (confirm('Reset all XP and completed levels? This cannot be undone.')) {
+    Store.reset();
+    renderTopChip();
+    navigate({ type: 'dashboard' });
+  }
+});
+
+renderSideNav();
+renderContent();
+renderTopChip();

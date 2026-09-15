@@ -11,11 +11,11 @@ const RANKS = [
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { xp: 0, completed: {} };
+    if (!raw) return { xp: 0, completed: {}, streakDates: [] };
     const parsed = JSON.parse(raw);
-    return { xp: parsed.xp || 0, completed: parsed.completed || {} };
+    return { xp: parsed.xp || 0, completed: parsed.completed || {}, streakDates: parsed.streakDates || [] };
   } catch (e) {
-    return { xp: 0, completed: {} };
+    return { xp: 0, completed: {}, streakDates: [] };
   }
 }
 
@@ -38,14 +38,31 @@ const Store = {
     if (this.isComplete(id)) return false;
     this.state.completed[id] = true;
     this.state.xp += xp;
+    const today = dateStr(new Date());
+    if (!this.state.streakDates.includes(today)) this.state.streakDates.push(today);
     saveState(this.state);
     return true;
   },
   reset() {
-    this.state = { xp: 0, completed: {} };
+    this.state = { xp: 0, completed: {}, streakDates: [] };
     saveState(this.state);
   },
 };
+
+function dateStr(d) { return d.toISOString().slice(0, 10); }
+
+function currentStreak(streakDates) {
+  const set = new Set(streakDates || []);
+  if (set.size === 0) return 0;
+  const cursor = new Date();
+  if (!set.has(dateStr(cursor))) cursor.setDate(cursor.getDate() - 1);
+  let count = 0;
+  while (set.has(dateStr(cursor))) {
+    count++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return count;
+}
 
 function showToast(msg) {
   const t = document.getElementById('toast');

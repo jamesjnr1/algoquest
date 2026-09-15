@@ -4,31 +4,30 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>AlgoQuest — Learn DSA &amp; R by Playing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">🗺️ <span>AlgoQuest</span></div>
-    <div class="tracks" id="track-tabs"></div>
-    <div class="xp-wrap">
-      <div class="xp-label">XP <span id="xp-value">0</span></div>
-      <div class="xp-bar"><div class="xp-fill" id="xp-fill"></div></div>
-      <div class="level-badge" id="rank-badge">Novice</div>
-    </div>
-  </header>
-
-  <main class="layout">
-    <aside class="map" id="level-map"></aside>
-    <section class="stage" id="stage">
-      <div class="welcome">
-        <h1>Welcome to AlgoQuest</h1>
-        <p>Pick a world on the left. <strong>DSA Isle</strong> teaches Data Structures &amp; Algorithms by letting
-          you push, pop, insert, and search things with your own clicks. <strong>R Harbor</strong> teaches R by
-          having you predict, build, and query real R snippets. Every level ends with a short check to lock in
-          the idea. Your progress is saved automatically in this browser.</p>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="logo">AlgoQuest</div>
+      <div class="menu-label">Learning</div>
+      <nav class="side-nav" id="side-nav"></nav>
+      <div class="sidebar-footer">
+        <button id="reset-btn" class="text-link">Reset progress</button>
       </div>
-    </section>
-  </main>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <input id="search-input" class="search-input" type="text" placeholder="Search a level…" />
+        <div class="xp-chip"><strong id="xp-value">0</strong> XP &nbsp;·&nbsp; <span id="rank-badge">Novice</span></div>
+      </div>
+      <div id="content" class="content"></div>
+    </main>
+  </div>
 
   <div id="toast" class="toast"></div>
 

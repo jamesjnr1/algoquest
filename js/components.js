@@ -55,6 +55,8 @@ function renderQuiz(root, questions, onDone) {
     const nextBtn = h('button', { class: 'btn primary' }, idx === questions.length - 1 ? 'Finish' : 'Next');
     nextBtn.disabled = true;
     nextBtn.addEventListener('click', () => {
+      if (nextBtn.disabled) return;
+      nextBtn.disabled = true;
       idx++;
       if (idx >= questions.length) onDone();
       else renderQ();
