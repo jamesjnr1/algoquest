@@ -499,3 +499,356 @@ R_LEVELS.push({
     },
   ],
 });
+
+// ---------- 7. Lists ----------
+R_LEVELS.push({
+  id: 'r-lists',
+  track: 'r',
+  title: 'Lists',
+  concept: 'Mixed types in one structure, with two flavors of indexing',
+  xp: 80,
+  intro: 'Unlike a vector, a <span class="inline-code">list</span> can hold different types together (numbers, strings, even other lists). This makes indexing trickier: single brackets <span class="inline-code">[ ]</span> return a smaller list, while double brackets <span class="inline-code">[[ ]]</span> "unwrap" to the actual element inside.',
+  mount(root, onTaskDone) {
+    const roundWrap = h('div', {});
+    root.appendChild(h('div', { class: 'hint-line' }, `my_list <- list(name = "Ann", age = 25, active = TRUE)`));
+    root.appendChild(roundWrap);
+    const rounds = [
+      { q: 'What does <span class="inline-code">my_list$age</span> return?', options: ['25', 'list(age = 25)', '"age"'], answer: 0, explain: '$ pulls out the actual value stored under that name.' },
+      { q: 'What does <span class="inline-code">my_list[1]</span> return (single bracket)?', options: ['"Ann"', 'list(name = "Ann")', 'An error'], answer: 1, explain: 'Single brackets always return a smaller LIST, even for one element — the name is kept.' },
+      { q: 'What does <span class="inline-code">my_list[[1]]</span> return (double bracket)?', options: ['list(name = "Ann")', '"Ann"', 'NULL'], answer: 1, explain: 'Double brackets unwrap the list and hand you the actual element — no more list wrapper.' },
+    ];
+    runRounds(roundWrap, rounds.map((r) => ({
+      render(container, done) { renderQuiz(container, [r], done); },
+    })), onTaskDone);
+  },
+  quiz: [
+    {
+      q: 'Why would you use a list instead of a vector to store a person\'s name, age, and active status?',
+      options: ['A vector would force everything to become the same type (e.g. everything turned into text)', 'Lists are always faster', 'Vectors can\'t hold more than 2 values'],
+      answer: 0,
+      explain: 'c("Ann", 25, TRUE) silently coerces everything to character — a list keeps each value\'s real type.',
+    },
+    {
+      q: 'A list can contain:',
+      options: ['Only numbers', 'Any mix of types, including other lists', 'Only exactly 2 elements'],
+      answer: 1,
+      explain: 'Lists are R\'s general-purpose container — nesting lists inside lists is common for structured data.',
+    },
+  ],
+});
+
+// ---------- 8. String Manipulation ----------
+R_LEVELS.push({
+  id: 'r-strings',
+  track: 'r',
+  title: 'String Manipulation',
+  concept: 'paste, substr, and pattern replacement',
+  xp: 80,
+  intro: 'R has a small toolkit for building and slicing text: <span class="inline-code">paste()</span>/<span class="inline-code">paste0()</span> join strings, <span class="inline-code">substr()</span> slices by position (1-indexed, inclusive), and <span class="inline-code">gsub()</span> replaces every match of a pattern.',
+  mount(root, onTaskDone) {
+    const roundWrap = h('div', {});
+    root.appendChild(roundWrap);
+    const rounds = [
+      { q: 'What does <span class="inline-code">paste("Hello", "World")</span> return?', options: ['"HelloWorld"', '"Hello World"', 'An error'], answer: 1, explain: 'paste() inserts a space between arguments by default (the sep argument).' },
+      { q: 'What does <span class="inline-code">paste0("R", "2026")</span> return?', options: ['"R2026"', '"R 2026"', '"R, 2026"'], answer: 0, explain: 'paste0() is shorthand for paste(..., sep = "") — no separator at all.' },
+      { q: 'What does <span class="inline-code">substr("Data Structures", 1, 4)</span> return?', options: ['"Data"', '"ata "', '"Data "'], answer: 0, explain: 'substr is 1-indexed and inclusive on both ends: characters 1 through 4 are D-a-t-a.' },
+      { q: 'What does <span class="inline-code">gsub("a", "@", "banana")</span> return?', options: ['"b@nana" (only the first match)', '"b@n@n@" (every match)', '"banana" unchanged'], answer: 1, explain: 'gsub replaces ALL matches ("global sub"); sub() would replace only the first one.' },
+    ];
+    runRounds(roundWrap, rounds.map((r) => ({
+      render(container, done) { renderQuiz(container, [r], done); },
+    })), onTaskDone);
+  },
+  quiz: [
+    {
+      q: 'Which function tells you how many characters are in a string?',
+      options: ['length()', 'nchar()', 'count()'],
+      answer: 1,
+      explain: 'length() on a string vector counts how many strings are in the vector (often 1) — nchar() counts characters within a string.',
+    },
+    {
+      q: '<span class="inline-code">toupper("data")</span> returns:',
+      options: ['"DATA"', '"Data"', '"data"'], answer: 0,
+      explain: 'toupper() converts every letter to uppercase (tolower() does the reverse).',
+    },
+  ],
+});
+
+// ---------- 9. Matrices ----------
+R_LEVELS.push({
+  id: 'r-matrices',
+  track: 'r',
+  title: 'Matrices',
+  concept: '2D indexing: [row, column]',
+  xp: 90,
+  intro: 'A matrix is a 2D grid of the same type. Index it with <span class="inline-code">m[row, col]</span> — leave either side blank to mean "all of them", so <span class="inline-code">m[1, ]</span> is row 1 and <span class="inline-code">m[, 2]</span> is column 2.',
+  mount(root, onTaskDone) {
+    const m = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+    root.appendChild(h('div', { class: 'hint-line' }, 'm <- rbind(c(1,2,3), c(4,5,6), c(7,8,9))  —  3 rounds'));
+    const roundWrap = h('div', {});
+    root.appendChild(roundWrap);
+
+    function renderMatrixPicker(container, exprHtml, expectedCells, onCorrect) {
+      const wrap = h('div', {});
+      const exprLine = h('div', { class: 'quiz-q' });
+      exprLine.innerHTML = exprHtml;
+      wrap.appendChild(exprLine);
+      const table = h('table', { class: 'df-table' });
+      const selected = new Set();
+      m.forEach((rowVals, r) => {
+        const tr = h('tr');
+        rowVals.forEach((v, c) => {
+          const td = h('td', {}, String(v));
+          td.style.cursor = 'pointer';
+          const key = `${r},${c}`;
+          td.addEventListener('click', () => {
+            if (selected.has(key)) { selected.delete(key); td.classList.remove('sel'); }
+            else { selected.add(key); td.classList.add('sel'); }
+          });
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+      wrap.appendChild(table);
+      const status = h('div', { class: 'status-line' });
+      const submit = h('button', { class: 'btn primary' }, 'Submit selection');
+      submit.addEventListener('click', () => {
+        const want = new Set(expectedCells.map(([r, c]) => `${r},${c}`));
+        const ok = selected.size === want.size && Array.from(selected).every((k) => want.has(k));
+        if (ok) { status.textContent = 'Correct!'; status.style.color = 'var(--good)'; onCorrect(); }
+        else { status.textContent = 'Not quite — click the cells again.'; status.style.color = 'var(--bad)'; }
+      });
+      wrap.appendChild(status);
+      wrap.appendChild(submit);
+      container.appendChild(wrap);
+    }
+
+    const rounds = [
+      { render: (c, done) => renderMatrixPicker(c, 'm[1, ]', [[0, 0], [0, 1], [0, 2]], done) },
+      { render: (c, done) => renderMatrixPicker(c, 'm[, 2]', [[0, 1], [1, 1], [2, 1]], done) },
+      { render: (c, done) => renderMatrixPicker(c, 'm[2, 3]', [[1, 2]], done) },
+    ];
+    runRounds(roundWrap, rounds, onTaskDone);
+  },
+  quiz: [
+    {
+      q: 'What does <span class="inline-code">dim(m)</span> tell you for a matrix?',
+      options: ['The number of rows and columns', 'The sum of all values', 'The data type'],
+      answer: 0,
+      explain: 'dim() returns c(nrow, ncol) — the shape of the matrix.',
+    },
+    {
+      q: '<span class="inline-code">t(m)</span> does what?',
+      options: ['Transposes the matrix (rows become columns)', 'Truncates decimal values', 'Tests if m is square'],
+      answer: 0,
+      explain: 't() is R\'s transpose function.',
+    },
+  ],
+});
+
+// ---------- 10. Control Flow Deep Dive ----------
+R_LEVELS.push({
+  id: 'r-control-flow',
+  track: 'r',
+  title: 'Control Flow: while, repeat, next',
+  concept: 'Loops beyond for, and skipping iterations',
+  xp: 80,
+  intro: 'Besides <span class="inline-code">for</span>, R has <span class="inline-code">while</span> (loop while a condition holds) and <span class="inline-code">repeat</span> (loop forever until an explicit <span class="inline-code">break</span>). Inside any loop, <span class="inline-code">next</span> skips straight to the next iteration.',
+  mount(root, onTaskDone) {
+    const roundWrap = h('div', {});
+    root.appendChild(roundWrap);
+    const rounds = [
+      {
+        q: 'What does this print?' + `<pre class="code-block">i &lt;- 1\nwhile (i &lt;= 3) {\n  print(i)\n  i &lt;- i + 1\n}</pre>`,
+        options: ['1  2  3', '1  2  3  4', 'Nothing (infinite loop)'],
+        answer: 0,
+        explain: 'The condition is checked BEFORE each iteration; once i becomes 4, 4 <= 3 is FALSE and the loop stops.',
+      },
+      {
+        q: 'What does this print?' + `<pre class="code-block">i &lt;- 1\nrepeat {\n  if (i &gt; 3) break\n  print(i)\n  i &lt;- i + 1\n}</pre>`,
+        options: ['1  2  3', 'Nothing, repeat needs a condition up front', 'Infinite loop, break doesn\'t work in repeat'],
+        answer: 0,
+        explain: 'repeat has no built-in condition at all — break is the only thing that can stop it, which is why it must be checked explicitly inside.',
+      },
+      {
+        q: 'What does this print?' + `<pre class="code-block">for (i in 1:5) {\n  if (i %% 2 == 0) next\n  print(i)\n}</pre>`,
+        options: ['1  3  5', '2  4', '1  2  3  4  5'],
+        answer: 0,
+        explain: 'next skips the rest of the current iteration (the print) whenever i is even, without stopping the loop.',
+      },
+    ];
+    runRounds(roundWrap, rounds.map((r) => ({
+      render(container, done) { renderQuiz(container, [r], done); },
+    })), onTaskDone);
+  },
+  quiz: [
+    {
+      q: 'What is the key risk with a while or repeat loop that for loops don\'t have?',
+      options: ['They can accidentally run forever if the stopping condition never becomes true', 'They can\'t use if statements inside', 'They only work on vectors'],
+      answer: 0,
+      explain: 'A for loop always has a fixed number of iterations up front; while/repeat depend on you correctly updating the condition/break.',
+    },
+    {
+      q: '<span class="inline-code">next</span> in R is equivalent to which keyword in many other languages?',
+      options: ['continue', 'break', 'return'],
+      answer: 0,
+      explain: 'Both skip the rest of the current loop iteration and move on to the next one.',
+    },
+  ],
+});
+
+// ---------- 11. Function Defaults & Multiple Arguments ----------
+R_LEVELS.push({
+  id: 'r-function-defaults',
+  track: 'r',
+  title: 'Function Defaults & Multiple Return Values',
+  concept: 'Default arguments, and returning several results via a list',
+  xp: 90,
+  intro: 'Parameters can have default values, used whenever the caller omits them. Since a function can only return one object, returning "multiple values" means bundling them into a <span class="inline-code">list</span>.',
+  mount(root, onTaskDone) {
+    const roundWrap = h('div', {});
+    root.appendChild(roundWrap);
+
+    const round1 = {
+      render(container, done) {
+        renderQuiz(container, [{
+          q: 'What does this return?' + `<pre class="code-block">power &lt;- function(base, exp = 2) {\n  base ^ exp\n}\npower(3)</pre>`,
+          options: ['9', '6', 'Error: exp is missing'],
+          answer: 0,
+          explain: 'exp defaults to 2 when the caller doesn\'t supply it, so power(3) computes 3^2 = 9.',
+        }], done);
+      },
+    };
+    const round2 = {
+      render(container, done) {
+        renderQuiz(container, [{
+          q: 'What does <span class="inline-code">power(2, 3)</span> return, using the same function?',
+          options: ['8', '6', '9'],
+          answer: 0,
+          explain: 'Supplying both arguments overrides the default: 2^3 = 8.',
+        }], done);
+      },
+    };
+    const round3 = {
+      render(container, done) {
+        const wrap = h('div', {});
+        wrap.appendChild(h('div', { class: 'quiz-q' }, 'Fill in the blank so min_max returns both the min AND max in one list:'));
+        wrap.appendChild(codeBlock('min_max <- function(v) {\n  list(min = min(v), max = ___)\n}', 'r'));
+        const opts = h('div', { class: 'quiz-opts' });
+        const choices = ['max(v)', 'v[length(v)]', 'sort(v)[1]'];
+        const status = h('div', { class: 'status-line' });
+        choices.forEach((c, i) => {
+          const b = h('button', { class: 'opt-btn' }, c);
+          b.addEventListener('click', () => {
+            if (i === 0) { b.classList.add('correct'); status.textContent = 'Right — max(v) finds the largest value, regardless of order.'; status.style.color = 'var(--good)'; done(); }
+            else { b.classList.add('wrong'); status.textContent = 'That wouldn\'t reliably give the maximum for any input vector.'; status.style.color = 'var(--bad)'; }
+          });
+          opts.appendChild(b);
+        });
+        wrap.appendChild(opts);
+        wrap.appendChild(status);
+        container.appendChild(wrap);
+      },
+    };
+    runRounds(roundWrap, [round1, round2, round3], onTaskDone);
+  },
+  quiz: [
+    {
+      q: 'Given <span class="inline-code">min_max(c(3, 7, 2, 9))$max</span> using the function above, what do you get?',
+      options: ['9', '3', 'A list, not a number'],
+      answer: 0,
+      explain: '$max pulls the max element straight out of the returned list.',
+    },
+    {
+      q: 'Why can\'t an R function just "return two things" directly?',
+      options: ['A function call always evaluates to exactly one object — bundling into a list (or vector) is how you carry multiple values out', 'R doesn\'t support multiple return values ever', 'It can, using return(a, b)'],
+      answer: 0,
+      explain: 'return(a, b) is not valid R — list(a = a, b = b) is the idiomatic way to package multiple results.',
+    },
+  ],
+});
+
+// ---------- 12. Basic Statistics ----------
+R_LEVELS.push({
+  id: 'r-basic-stats',
+  track: 'r',
+  title: 'Basic Statistics in R',
+  concept: 'Spread, correlation, frequency, and random sampling',
+  xp: 90,
+  intro: 'R was built for statistics. Match each function to what it computes: variance, correlation, frequency counts, percentile cut points, and random sampling from a normal distribution.',
+  mount(root, onTaskDone) {
+    const pairs = [
+      { id: 'a', code: 'var(x)', desc: 'How spread out the values are, in squared units (variance)' },
+      { id: 'b', code: 'cor(x, y)', desc: 'How strongly two numeric vectors move together, from -1 to 1' },
+      { id: 'c', code: 'table(x)', desc: 'Counts how many times each distinct value appears' },
+      { id: 'd', code: 'quantile(x)', desc: 'Splits the data into percentile cut points (0%, 25%, 50%, 75%, 100%)' },
+      { id: 'e', code: 'rnorm(100)', desc: 'Generates 100 random values from a normal (bell curve) distribution' },
+    ];
+    const codes = shuffle(pairs.map((p) => ({ id: p.id, label: p.code })));
+    const descs = shuffle(pairs.map((p) => ({ id: p.id, label: p.desc })));
+    let selectedCode = null;
+    let matched = 0;
+    const status = h('div', { class: 'status-line' }, 'Click a function, then click the description it matches.');
+
+    const codeCol = h('div', { style: 'display:flex;flex-direction:column;gap:8px;min-width:180px;' });
+    const descCol = h('div', { style: 'display:flex;flex-direction:column;gap:8px;flex:1;' });
+    const codeBtns = {};
+
+    codes.forEach((c) => {
+      const b = h('button', { class: 'opt-btn' });
+      b.innerHTML = `<span class="inline-code">${c.label}</span>`;
+      b.addEventListener('click', () => {
+        if (b.classList.contains('correct')) return;
+        Object.values(codeBtns).forEach((x) => x.classList.remove('sel'));
+        selectedCode = c;
+        b.style.borderColor = 'var(--accent-2)';
+      });
+      codeBtns[c.id] = b;
+      codeCol.appendChild(b);
+    });
+
+    descs.forEach((d) => {
+      const b = h('button', { class: 'opt-btn' }, d.label);
+      b.addEventListener('click', () => {
+        if (b.classList.contains('correct') || !selectedCode) return;
+        if (selectedCode.id === d.id) {
+          b.classList.add('correct');
+          codeBtns[selectedCode.id].classList.add('correct');
+          codeBtns[selectedCode.id].style.borderColor = '';
+          matched++;
+          status.textContent = `Matched! (${matched}/${pairs.length})`;
+          status.style.color = 'var(--good)';
+          selectedCode = null;
+          if (matched === pairs.length) {
+            status.textContent = 'All matched! ' + status.textContent;
+            onTaskDone();
+          }
+        } else {
+          b.classList.add('wrong');
+          codeBtns[selectedCode.id].style.borderColor = 'var(--bad)';
+          status.textContent = 'Not a match — try again.';
+          status.style.color = 'var(--bad)';
+          setTimeout(() => { b.classList.remove('wrong'); codeBtns[selectedCode.id].style.borderColor = ''; }, 700);
+          selectedCode = null;
+        }
+      });
+      descCol.appendChild(b);
+    });
+
+    root.appendChild(status);
+    root.appendChild(h('div', { style: 'display:flex;gap:24px;margin-top:14px;flex-wrap:wrap;' }, [codeCol, descCol]));
+  },
+  quiz: [
+    {
+      q: 'sd(x) and var(x) are related how?',
+      options: ['sd(x) is the square root of var(x)', 'They are unrelated', 'var(x) is always 0 when sd(x) is 0... and never otherwise'],
+      answer: 0,
+      explain: 'Standard deviation is defined as the square root of variance, putting spread back into the original units.',
+    },
+    {
+      q: 'Why use rnorm() when practicing statistics?',
+      options: ['It generates realistic random test data so you can try functions like mean/sd/hist without needing a real dataset', 'It sorts real data', 'It removes outliers automatically'],
+      answer: 0,
+      explain: 'rnorm(n, mean, sd) is a quick way to simulate a sample and see how statistical functions behave.',
+    },
+  ],
+});

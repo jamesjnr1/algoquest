@@ -434,7 +434,7 @@ CODE_LEVELS.push({
     return order
 `,
   tests: [
-    { description: 'Visits every node exactly once, starting at the start node', code: `graph = {'A': ['B'], 'B': ['A', 'C']}\norder = dfs(graph, 'A')\nassert order[0] == 'A'\nassert set(order) == {'A', 'B', 'C'}` },
+    { description: 'Visits every node exactly once, starting at the start node', code: `graph = {'A': ['B'], 'B': ['A', 'C'], 'C': ['B']}\norder = dfs(graph, 'A')\nassert order[0] == 'A'\nassert set(order) == {'A', 'B', 'C'}` },
     { description: 'Handles a single-node graph', code: `graph = {'A': []}\nassert dfs(graph, 'A') == ['A']` },
     { description: 'Handles a simple chain in exact order', code: `graph = {'A': ['B'], 'B': ['A', 'C'], 'C': ['B', 'D'], 'D': ['C']}\nassert dfs(graph, 'A') == ['A', 'B', 'C', 'D']` },
   ],
@@ -554,5 +554,454 @@ CODE_LEVELS.push({
     options: ['The table automatically grows itself', 'Multiple keys collide into the same bucket and must be chained', 'Python raises an error'],
     answer: 1,
     explain: 'Only 2 buckets for 10 keys guarantees collisions — chaining (a list per bucket) is what lets put/get still work correctly.',
+  }],
+});
+
+// ---------- 16. Quick Sort ----------
+CODE_LEVELS.push({
+  id: 'py-quicksort',
+  track: 'py',
+  title: 'Quick Sort',
+  concept: 'Partition around a pivot, then recurse',
+  xp: 100,
+  intro: '<span class="inline-code">partition()</span> is given — it rearranges <span class="inline-code">arr[low..high]</span> around the pivot (last element) and returns the pivot\'s final index. Write <span class="inline-code">quick_sort(arr, low, high)</span> to partition, then recursively sort both sides.',
+  starterCode: `def partition(arr, low, high):
+    """Partition arr[low..high] around arr[high]. Return the pivot's final index. (Given.)"""
+    pivot = arr[high]
+    i = low - 1
+    for j in range(low, high):
+        if arr[j] <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]
+    arr[i + 1], arr[high] = arr[high], arr[i + 1]
+    return i + 1
+
+
+def quick_sort(arr, low=0, high=None):
+    """Sort arr in place using quicksort. Returns arr for convenience."""
+    if high is None:
+        high = len(arr) - 1
+    # TODO: base case - if low >= high, this slice is already sorted (0 or 1 elements)
+    # TODO: otherwise partition, then recursively quick_sort the left and right slices
+    return arr
+`,
+  tests: [
+    { description: 'Sorts an unordered list', code: `result = quick_sort([7, 2, 8, 4, 1, 9, 3])\nassert result == [1, 2, 3, 4, 7, 8, 9], f"expected [1, 2, 3, 4, 7, 8, 9], got {result}"` },
+    { description: 'Handles an empty list', code: `assert quick_sort([]) == []` },
+    { description: 'Handles duplicates', code: `result = quick_sort([3, 1, 3, 2, 1])\nassert result == [1, 1, 2, 3, 3], f"expected [1, 1, 2, 3, 3], got {result}"` },
+  ],
+  mount(root, onTaskDone) { renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone); },
+  quiz: [{
+    q: 'Unlike merge sort, quick sort can sort in place using only O(log n) extra memory (for recursion) because:',
+    options: ['It swaps elements within the original array instead of building new merged lists', 'It doesn\'t actually sort everything', 'It only works on small arrays'],
+    answer: 0,
+    explain: 'Partitioning rearranges elements in place via swaps, unlike merge sort\'s merge step which allocates new lists.',
+  }],
+});
+
+// ---------- 17. Build a Min-Heap ----------
+CODE_LEVELS.push({
+  id: 'py-min-heap',
+  track: 'py',
+  title: 'Build a Min-Heap',
+  concept: 'Sift up on insert, sift down on removal',
+  xp: 100,
+  intro: 'Implement a <span class="inline-code">MinHeap</span> backed by a plain list, using the standard index tricks: for index <span class="inline-code">i</span>, its parent is <span class="inline-code">(i - 1) // 2</span> and its children are <span class="inline-code">2*i + 1</span> and <span class="inline-code">2*i + 2</span>.',
+  starterCode: `class MinHeap:
+    def __init__(self):
+        self.data = []
+
+    def push(self, value):
+        """Add value to the heap, then sift it up while smaller than its parent."""
+        self.data.append(value)
+        i = len(self.data) - 1
+        # TODO: while i > 0 and self.data[i] < self.data[parent], swap with parent and move i to parent
+        pass
+
+    def pop(self):
+        """Remove and return the smallest value."""
+        if not self.data:
+            return None
+        smallest = self.data[0]
+        last = self.data.pop()
+        if self.data:
+            self.data[0] = last
+            i = 0
+            # TODO: sift down - while a child is smaller than self.data[i], swap with the smaller child
+            pass
+        return smallest
+
+    def peek(self):
+        return self.data[0] if self.data else None
+`,
+  tests: [
+    { description: 'Pops values in ascending order regardless of push order', code: `h = MinHeap()\nfor v in [5, 3, 8, 1, 9, 2]:\n    h.push(v)\nresult = [h.pop() for _ in range(6)]\nassert result == [1, 2, 3, 5, 8, 9], f"expected [1, 2, 3, 5, 8, 9], got {result}"` },
+    { description: 'peek shows the min without removing it', code: `h = MinHeap()\nh.push(4)\nh.push(2)\nassert h.peek() == 2\nassert h.peek() == 2, "peek should not remove anything"` },
+    { description: 'pop on an empty heap returns None', code: `h = MinHeap()\nassert h.pop() is None` },
+  ],
+  mount(root, onTaskDone) { renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone); },
+  quiz: [{
+    q: 'Python\'s standard library already has a heap implementation. What module is it?',
+    options: ['heapq', 'collections', 'itertools'],
+    answer: 0,
+    explain: 'heapq turns a plain list into a min-heap with heappush/heappop — exactly what you just built by hand.',
+  }],
+});
+
+// ---------- 18. Counting Sort ----------
+CODE_LEVELS.push({
+  id: 'py-counting-sort',
+  track: 'py',
+  title: 'Counting Sort',
+  concept: 'Sort by counting occurrences, not comparing',
+  xp: 90,
+  intro: 'Counting sort skips comparisons entirely: count how many times each value appears, then rebuild the array in order. It runs in O(n + k) time where k is the range of values — but only works well for small ranges of non-negative integers.',
+  starterCode: `def counting_sort(arr):
+    """Return a new sorted list. Assumes arr contains non-negative integers."""
+    if not arr:
+        return []
+    # TODO: counts = [0] * (max(arr) + 1)
+    # TODO: for each value in arr, increment counts[value]
+    # TODO: build the result by walking counts in order, appending each value as many times as it was counted
+    pass
+`,
+  tests: [
+    { description: 'Sorts a list of small non-negative integers', code: `result = counting_sort([4, 2, 2, 8, 3, 3, 1])\nassert result == [1, 2, 2, 3, 3, 4, 8], f"expected [1, 2, 2, 3, 3, 4, 8], got {result}"` },
+    { description: 'Handles an empty list', code: `assert counting_sort([]) == []` },
+    { description: 'Handles all-identical values', code: `assert counting_sort([5, 5, 5]) == [5, 5, 5]` },
+  ],
+  mount(root, onTaskDone) { renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone); },
+  quiz: [{
+    q: 'Why can\'t counting sort be used to sort, say, arbitrary floating point numbers efficiently?',
+    options: [
+      'It needs an index/bucket for every possible value in the range, which only makes sense for a small range of integers',
+      'Floats are always already sorted',
+      'It actually works fine for any data',
+    ],
+    answer: 0,
+    explain: 'The counts array size depends on the value range (k) — for floats or huge integer ranges, that becomes impractical.',
+  }],
+});
+
+// ---------- 19. Doubly Linked List ----------
+CODE_LEVELS.push({
+  id: 'py-doubly-linked-list',
+  track: 'py',
+  title: 'Doubly Linked List',
+  concept: 'Nodes with both next and prev pointers',
+  xp: 100,
+  intro: 'Implement <span class="inline-code">append(value)</span> (add to the tail) and <span class="inline-code">remove(value)</span> (delete the first matching node) for a doubly linked list, keeping both <span class="inline-code">next</span> and <span class="inline-code">prev</span> pointers consistent.',
+  starterCode: `class Node:
+    def __init__(self, value):
+        self.value = value
+        self.prev = None
+        self.next = None
+
+
+class DoublyLinkedList:
+    def __init__(self):
+        self.head = None
+        self.tail = None
+
+    def append(self, value):
+        """Add a new node with value to the end of the list."""
+        node = Node(value)
+        # TODO: if the list is empty, node becomes both head and tail
+        # TODO: otherwise link node after self.tail (both directions!), then update self.tail
+        pass
+
+    def remove(self, value):
+        """Remove the first node with a matching value, relinking its neighbors."""
+        node = self.head
+        while node is not None and node.value != value:
+            node = node.next
+        if node is None:
+            return False
+        # TODO: relink node.prev.next (or self.head) to skip over node
+        # TODO: relink node.next.prev (or self.tail) to skip over node
+        return True
+
+    def to_list(self):
+        values = []
+        node = self.head
+        while node:
+            values.append(node.value)
+            node = node.next
+        return values
+`,
+  tests: [
+    { description: 'append builds the list in order', code: `d = DoublyLinkedList()\nd.append(1)\nd.append(2)\nd.append(3)\nassert d.to_list() == [1, 2, 3], f"expected [1, 2, 3], got {d.to_list()}"` },
+    { description: 'the tail\'s prev chain also works (backward traversal)', code: `d = DoublyLinkedList()\nfor v in [1, 2, 3]:\n    d.append(v)\nvalues = []\nnode = d.tail\nwhile node:\n    values.append(node.value)\n    node = node.prev\nassert values == [3, 2, 1], f"expected [3, 2, 1], got {values}"` },
+    { description: 'remove relinks neighbors correctly, including at the ends', code: `d = DoublyLinkedList()\nfor v in [1, 2, 3]:\n    d.append(v)\nassert d.remove(2) == True\nassert d.to_list() == [1, 3], f"expected [1, 3], got {d.to_list()}"\nassert d.remove(1) == True\nassert d.to_list() == [3]\nassert d.remove(99) == False` },
+  ],
+  mount(root, onTaskDone) { renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone); },
+  quiz: [{
+    q: 'When removing the head node, what has to change?',
+    options: [
+      'self.head must be updated to the removed node\'s next, and that new head\'s prev must become None',
+      'Nothing, the list handles it automatically',
+      'The entire list must be rebuilt',
+    ],
+    answer: 0,
+    explain: 'The removed node had no prev, so its next becomes the new head, and the new head must forget its old prev link.',
+  }],
+});
+
+// ---------- 20. Dijkstra's Algorithm ----------
+CODE_LEVELS.push({
+  id: 'py-dijkstra',
+  track: 'py',
+  title: "Dijkstra's Shortest Path",
+  concept: 'Greedily relax edges from the closest unvisited node',
+  xp: 110,
+  intro: 'Write <span class="inline-code">dijkstra(graph, start)</span>. <span class="inline-code">graph</span> maps each node to a dict of <span class="inline-code">{neighbor: weight}</span>. Return a dict of the shortest distance from <span class="inline-code">start</span> to every node.',
+  starterCode: `def dijkstra(graph, start):
+    """Return a dict mapping every node to its shortest distance from start."""
+    dist = {node: float('inf') for node in graph}
+    dist[start] = 0
+    visited = set()
+    # TODO: while there are unvisited nodes:
+    #   1. pick the unvisited node with the smallest dist[] value
+    #   2. mark it visited
+    #   3. for each of its neighbors, relax: if dist[current] + weight < dist[neighbor], update it
+    return dist
+`,
+  tests: [
+    {
+      description: 'Finds shortest distances on a small weighted graph',
+      code: `graph = {'A': {'B': 4, 'C': 1}, 'B': {'D': 5}, 'C': {'B': 2, 'D': 8}, 'D': {'E': 3}, 'E': {}}\nresult = dijkstra(graph, 'A')\nexpected = {'A': 0, 'B': 3, 'C': 1, 'D': 8, 'E': 11}\nassert result == expected, f"expected {expected}, got {result}"`,
+    },
+    {
+      description: 'The start node always has distance 0',
+      code: `graph = {'A': {'B': 1}, 'B': {}}\nassert dijkstra(graph, 'A')['A'] == 0`,
+    },
+    {
+      description: 'An unreachable node keeps distance infinity',
+      code: `graph = {'A': {'B': 1}, 'B': {}, 'C': {}}\nresult = dijkstra(graph, 'A')\nassert result['C'] == float('inf'), f"expected inf, got {result['C']}"`,
+    },
+  ],
+  mount(root, onTaskDone) { renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone); },
+  quiz: [{
+    q: 'In the test graph, why is the shortest A→B distance 3, not 4 (the direct edge)?',
+    options: [
+      'Going A→C (1) then C→B (2) totals 3, which beats the direct A→B edge of 4',
+      'It\'s a typo, 4 is correct',
+      'Dijkstra always prefers more hops',
+    ],
+    answer: 0,
+    explain: 'Dijkstra finds the cheapest total path, which is not always the direct edge.',
+  }],
+});
+
+// ---------- 21. Topological Sort ----------
+CODE_LEVELS.push({
+  id: 'py-topological-sort',
+  track: 'py',
+  title: 'Topological Sort',
+  concept: "Kahn's algorithm: repeatedly remove zero-in-degree nodes",
+  xp: 100,
+  intro: 'Write <span class="inline-code">topological_sort(graph)</span> where <span class="inline-code">graph</span> maps each node to a list of nodes it points to (its dependents). Use Kahn\'s algorithm: track in-degree (how many prerequisites remain) for every node, and repeatedly output any node with in-degree 0, decrementing its dependents\' in-degree.',
+  starterCode: `def topological_sort(graph):
+    """Return a list of all nodes in a valid topological order."""
+    in_degree = {node: 0 for node in graph}
+    for node in graph:
+        for dependent in graph[node]:
+            in_degree[dependent] += 1
+
+    queue = [node for node in graph if in_degree[node] == 0]
+    order = []
+    # TODO: while queue is not empty:
+    #   pop a node, append it to order,
+    #   then for each of its dependents, decrement in_degree and enqueue it if it hits 0
+    return order
+`,
+  tests: [
+    {
+      description: 'Produces a valid order (every edge points forward)',
+      code: `graph = {'CS101': ['CS201'], 'MATH101': ['CS301'], 'CS201': ['CS301'], 'CS301': ['CS401'], 'CS401': []}\norder = topological_sort(graph)\nassert set(order) == set(graph.keys()), f"should include every node exactly once, got {order}"\npositions = {node: i for i, node in enumerate(order)}\nfor node, deps in graph.items():\n    for dep in deps:\n        assert positions[node] < positions[dep], f"{node} must come before {dep}"`,
+    },
+    { description: 'Handles a graph with no dependencies', code: `graph = {'A': [], 'B': [], 'C': []}\nassert set(topological_sort(graph)) == {'A', 'B', 'C'}` },
+    { description: 'Handles a simple chain in exact order', code: `graph = {'A': ['B'], 'B': ['C'], 'C': []}\nassert topological_sort(graph) == ['A', 'B', 'C']` },
+  ],
+  mount(root, onTaskDone) { renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone); },
+  quiz: [{
+    q: 'What does a node\'s "in-degree" represent here?',
+    options: ['How many other nodes point to it (unmet prerequisites)', 'How many nodes it points to', 'Its distance from the start'],
+    answer: 0,
+    explain: 'In-degree 0 means nothing depends on it being done first — it\'s safe to output right away.',
+  }],
+});
+
+// ---------- 22. Union-Find ----------
+CODE_LEVELS.push({
+  id: 'py-union-find',
+  track: 'py',
+  title: 'Union-Find (Disjoint Set)',
+  concept: 'Track connected groups with find() and union()',
+  xp: 100,
+  intro: 'Implement <span class="inline-code">find(x)</span> (returns the root/representative of x\'s group, following parent pointers) and <span class="inline-code">union(x, y)</span> (merges the two groups by pointing one root at the other).',
+  starterCode: `class UnionFind:
+    def __init__(self, items):
+        self.parent = {item: item for item in items}
+
+    def find(self, x):
+        """Return the root representative of x's group."""
+        # TODO: follow self.parent[x] until it points to itself, then return that root
+        pass
+
+    def union(self, x, y):
+        """Merge the groups containing x and y."""
+        root_x = self.find(x)
+        root_y = self.find(y)
+        # TODO: if the roots differ, point one root's parent at the other
+        pass
+
+    def connected(self, x, y):
+        return self.find(x) == self.find(y)
+`,
+  tests: [
+    { description: 'Items start in their own separate groups', code: `uf = UnionFind(['A', 'B', 'C'])\nassert uf.connected('A', 'B') == False` },
+    { description: 'union connects two items', code: `uf = UnionFind(['A', 'B', 'C'])\nuf.union('A', 'B')\nassert uf.connected('A', 'B') == True\nassert uf.connected('A', 'C') == False` },
+    { description: 'union is transitive through a chain', code: `uf = UnionFind(['A', 'B', 'C', 'D'])\nuf.union('A', 'B')\nuf.union('C', 'D')\nuf.union('B', 'C')\nassert uf.connected('A', 'D') == True, "A-B, C-D, and B-C should chain A and D together"` },
+  ],
+  mount(root, onTaskDone) { renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone); },
+  quiz: [{
+    q: 'Why does union() compare find(x) and find(y) instead of just linking x and y directly?',
+    options: [
+      'Linking the roots (not the original items) is what actually merges the two whole groups, however large each already is',
+      'It doesn\'t matter, either way works identically',
+      'find() is only there for debugging',
+    ],
+    answer: 0,
+    explain: 'x and y might already be deep inside larger groups; merging at the roots correctly joins both entire groups in one step.',
+  }],
+});
+
+// ---------- 23. Dynamic Programming: 0/1 Knapsack ----------
+CODE_LEVELS.push({
+  id: 'py-knapsack',
+  track: 'py',
+  title: 'Dynamic Programming: 0/1 Knapsack',
+  concept: 'Build a table of best-value-so-far',
+  xp: 110,
+  intro: 'Write <span class="inline-code">knapsack(weights, values, capacity)</span> using a 2D DP table: <span class="inline-code">dp[i][w]</span> is the best value achievable using the first <span class="inline-code">i</span> items with capacity <span class="inline-code">w</span>. For each item, either skip it (<span class="inline-code">dp[i-1][w]</span>) or take it (<span class="inline-code">values[i-1] + dp[i-1][w-weights[i-1]]</span>, only if it fits) — take the max.',
+  starterCode: `def knapsack(weights, values, capacity):
+    """Return the maximum total value achievable without exceeding capacity."""
+    n = len(weights)
+    dp = [[0] * (capacity + 1) for _ in range(n + 1)]
+    # TODO: for i in range(1, n + 1): for w in range(capacity + 1):
+    #   skip_value = dp[i-1][w]
+    #   if weights[i-1] <= w: take_value = values[i-1] + dp[i-1][w - weights[i-1]]
+    #   dp[i][w] = max(skip_value, take_value) if it fits, else skip_value
+    return dp[n][capacity]
+`,
+  tests: [
+    { description: 'A small worked example', code: `weights = [2, 3, 4, 5]\nvalues = [3, 4, 5, 6]\nresult = knapsack(weights, values, 7)\nassert result == 9, f"expected 9, got {result}"` },
+    { description: 'Zero capacity means zero value', code: `assert knapsack([1, 2], [10, 20], 0) == 0` },
+    { description: 'Capacity large enough for everything', code: `result = knapsack([1, 1, 1], [5, 5, 5], 10)\nassert result == 15, f"expected 15, got {result}"` },
+  ],
+  mount(root, onTaskDone) { renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone); },
+  quiz: [{
+    q: 'Why build a full 2D table instead of just recursing?',
+    options: [
+      'Plain recursion recomputes the same (item, remaining capacity) subproblems repeatedly; the table computes each one exactly once',
+      'Tables are required by Python',
+      'It uses less code',
+    ],
+    answer: 0,
+    explain: 'Same idea as memoized Fibonacci — the table is just memoization organized as a grid instead of a dict.',
+  }],
+});
+
+// ---------- 24. Dynamic Programming: Longest Common Subsequence ----------
+CODE_LEVELS.push({
+  id: 'py-lcs',
+  track: 'py',
+  title: 'Dynamic Programming: Longest Common Subsequence',
+  concept: 'Compare two sequences character by character, building a table',
+  xp: 110,
+  intro: 'Write <span class="inline-code">lcs(a, b)</span>: return the length of the longest subsequence common to both strings (characters in order, not necessarily contiguous). If the last characters match, extend the diagonal answer by 1; otherwise take the best of dropping the last character of either string.',
+  starterCode: `def lcs(a, b):
+    """Return the length of the longest common subsequence of a and b."""
+    n, m = len(a), len(b)
+    dp = [[0] * (m + 1) for _ in range(n + 1)]
+    # TODO: for i in range(1, n + 1): for j in range(1, m + 1):
+    #   if a[i-1] == b[j-1]: dp[i][j] = dp[i-1][j-1] + 1
+    #   else: dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+    return dp[n][m]
+`,
+  tests: [
+    { description: 'A classic example', code: `result = lcs("ABCBDAB", "BDCABA")\nassert result == 4, f"expected 4, got {result}"` },
+    { description: 'No characters in common', code: `assert lcs("abc", "xyz") == 0` },
+    { description: 'One string is empty', code: `assert lcs("", "abc") == 0` },
+    { description: 'Identical strings', code: `assert lcs("hello", "hello") == 5` },
+  ],
+  mount(root, onTaskDone) { renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone); },
+  quiz: [{
+    q: 'A "subsequence" (as opposed to a substring) means:',
+    options: [
+      'Characters must appear in order but don\'t need to be contiguous',
+      'Characters must be contiguous',
+      'The strings must be the same length',
+    ],
+    answer: 0,
+    explain: '"ACE" is a subsequence of "ABCDE" (skip B and D), but not a substring since those letters aren\'t adjacent in the original.',
+  }],
+});
+
+// ---------- 25. Trie (Prefix Tree) ----------
+CODE_LEVELS.push({
+  id: 'py-trie',
+  track: 'py',
+  title: 'Trie (Prefix Tree)',
+  concept: 'Share common prefixes between words in a tree',
+  xp: 110,
+  intro: 'A trie stores words letter by letter in a tree, so words sharing a prefix share the same path. Implement <span class="inline-code">insert(word)</span>, <span class="inline-code">search(word)</span> (exact match, ending at a node marked as a complete word), and <span class="inline-code">starts_with(prefix)</span> (any word begins with this prefix).',
+  starterCode: `class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_word = False
+
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        """Add word to the trie, one character per level."""
+        node = self.root
+        # TODO: for each character, move to (creating if needed) node.children[char]
+        # TODO: after the loop, mark the final node as a complete word
+        pass
+
+    def search(self, word):
+        """Return True only if word was inserted exactly (not just a prefix of something)."""
+        node = self.root
+        # TODO: walk the trie by character; if any character is missing, return False
+        # TODO: at the end, return whether that final node is marked as a complete word
+        pass
+
+    def starts_with(self, prefix):
+        """Return True if any inserted word starts with prefix."""
+        node = self.root
+        # TODO: walk the trie by character; if any character is missing, return False
+        # TODO: if you make it through the whole prefix, return True
+        pass
+`,
+  tests: [
+    { description: 'search finds exactly-inserted words', code: `t = Trie()\nt.insert("cat")\nt.insert("car")\nassert t.search("cat") == True\nassert t.search("car") == True\nassert t.search("ca") == False, "ca was never inserted as a complete word"` },
+    { description: 'search rejects words that were never inserted', code: `t = Trie()\nt.insert("cat")\nassert t.search("dog") == False` },
+    { description: 'starts_with finds any matching prefix', code: `t = Trie()\nt.insert("cat")\nt.insert("car")\nassert t.starts_with("ca") == True\nassert t.starts_with("ca") == True\nassert t.starts_with("do") == False` },
+  ],
+  mount(root, onTaskDone) { renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone); },
+  quiz: [{
+    q: 'Why does "cat" and "car" sharing the prefix "ca" only need ONE path for "ca" in the trie?',
+    options: [
+      'Both words are inserted character-by-character, reusing the same nodes wherever the prefix is identical',
+      'Tries always merge similar-looking words',
+      'It doesn\'t — each word gets a fully separate path',
+    ],
+    answer: 0,
+    explain: 'Insert only creates a new node when a character path doesn\'t exist yet, so shared prefixes are automatically deduplicated.',
   }],
 });

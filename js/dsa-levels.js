@@ -845,3 +845,648 @@ DSA_LEVELS.push({
     },
   ],
 });
+
+// ---------- 11. Doubly Linked Lists ----------
+DSA_LEVELS.push({
+  id: 'dsa-doubly-linked-list',
+  track: 'dsa',
+  title: 'Doubly Linked Lists',
+  concept: 'Two pointers per node: next AND prev',
+  xp: 90,
+  intro: 'A doubly linked list gives every node a <span class="inline-code">prev</span> pointer as well as <span class="inline-code">next</span>, so you can walk backward and delete a known node in O(1) without needing to find its predecessor. Work through inserting, deleting, and walking backward.',
+  mount(root, onTaskDone) {
+    let arr = [10, 20, 30];
+    const status = h('div', { class: 'status-line' }, 'Goal: 1) Insert 25 after 20  2) Delete the head (10)  3) Walk the list backward from the tail.');
+    const row = h('div', { class: 'viz-row' });
+    const goal = ['insert', 'delete', 'back', 'back', 'back'];
+    let step = 0;
+    let backIdx = -1;
+
+    function draw() {
+      clear(row);
+      arr.forEach((v, i) => {
+        const isBackCursor = backIdx === i;
+        row.appendChild(h('div', { class: 'box' + (isBackCursor ? ' hi' : '') }, String(v)));
+        if (i < arr.length - 1) row.appendChild(h('div', { class: 'hint-line' }, '⇄'));
+      });
+    }
+    draw();
+
+    function advance(msg) {
+      step++;
+      if (step >= goal.length) {
+        status.textContent = msg + ' Goal complete! Every deletion and backward step here only needed local pointer fixes — no shifting like an array.';
+        onTaskDone();
+      } else {
+        status.textContent = msg;
+      }
+    }
+
+    const insertBtn = h('button', { class: 'btn' }, 'Insert 25 after 20');
+    insertBtn.addEventListener('click', () => {
+      if (goal[step] !== 'insert') { status.textContent = 'Try the next step in the goal instead.'; return; }
+      const i = arr.indexOf(20);
+      arr.splice(i + 1, 0, 25);
+      draw();
+      advance('Inserted 25: the new node\'s prev/next point to 20 and 30, and THEIR pointers were updated to point back to it.');
+    });
+    const deleteBtn = h('button', { class: 'btn' }, 'Delete the head');
+    deleteBtn.addEventListener('click', () => {
+      if (goal[step] !== 'delete') { status.textContent = 'Try the next step in the goal instead.'; return; }
+      arr.shift();
+      draw();
+      advance('Deleted the head: the new head\'s prev pointer was simply set to null — no other node needed to move.');
+    });
+    const backBtn = h('button', { class: 'btn primary' }, 'Step backward from tail');
+    backBtn.addEventListener('click', () => {
+      if (goal[step] !== 'back') { status.textContent = 'Insert and delete first, then walk backward.'; return; }
+      if (backIdx === -1) backIdx = arr.length - 1;
+      else if (backIdx > 0) backIdx--;
+      draw();
+      advance(`At node ${arr[backIdx]}, walking via its prev pointer.`);
+    });
+
+    root.appendChild(status);
+    root.appendChild(row);
+    root.appendChild(h('div', { class: 'btn-row' }, [insertBtn, deleteBtn, backBtn]));
+  },
+  quiz: [
+    {
+      q: 'What does a doubly linked list cost extra, compared to a singly linked list?',
+      options: ['Nothing, it\'s strictly better', 'One extra pointer (prev) per node, for the ability to traverse backward and delete in O(1) with a node reference', 'It can only store numbers'],
+      answer: 1,
+      explain: 'The prev pointer doubles the pointer overhead per node in exchange for backward traversal and cheaper deletion.',
+    },
+    {
+      q: 'Why can a doubly linked list delete a known node in O(1), unlike an array?',
+      options: [
+        'It can\'t — deletion is always O(n)',
+        'The node\'s prev and next neighbors can be relinked directly, without shifting anything else',
+        'Doubly linked lists keep a sorted index',
+      ],
+      answer: 1,
+      explain: 'Only two pointers change (the neighbors\' next/prev) — nothing else in the list is touched.',
+    },
+  ],
+});
+
+// ---------- 12. Heaps ----------
+DSA_LEVELS.push({
+  id: 'dsa-heaps',
+  track: 'dsa',
+  title: 'Heaps (Priority Queues)',
+  concept: 'A complete tree where every parent is smaller than its children',
+  xp: 100,
+  intro: 'A min-heap keeps the smallest value at the root, with every parent smaller than its children (but siblings can be in any order). Insert by adding to the next open spot, then <strong>sift up</strong> — swap with the parent while it\'s bigger than you.',
+  mount(root, onTaskDone) {
+    const sequence = [5, 3, 8, 1, 9];
+    let heap = [];
+    let seqIdx = 0;
+    let cursor = -1; // index currently sifting up
+
+    const status = h('div', { class: 'status-line' });
+    const treeWrap = h('div', { class: 'tree-wrap' });
+    const btnRow = h('div', { class: 'btn-row' });
+
+    function parentOf(i) { return Math.floor((i - 1) / 2); }
+
+    function renderNode(i, isCursor) {
+      const circle = h('div', { class: 'tnode' + (isCursor ? ' path' : '') }, String(heap[i]));
+      const col = h('div', { style: 'display:flex;flex-direction:column;align-items:center;gap:14px;' });
+      col.appendChild(circle);
+      const li = 2 * i + 1, ri = 2 * i + 2;
+      if (li < heap.length || ri < heap.length) {
+        const row = h('div', { style: 'display:flex;gap:30px;' });
+        row.appendChild(li < heap.length ? renderNode(li, li === cursor) : h('div', { class: 'tnode slot' }, '·'));
+        row.appendChild(ri < heap.length ? renderNode(ri, ri === cursor) : h('div', { class: 'tnode slot' }, '·'));
+        col.appendChild(row);
+      }
+      return col;
+    }
+
+    function draw() {
+      clear(treeWrap);
+      if (heap.length === 0) treeWrap.appendChild(h('div', { class: 'hint-line' }, '(empty heap)'));
+      else treeWrap.appendChild(renderNode(0, cursor === 0));
+    }
+
+    function renderControls() {
+      clear(btnRow);
+      if (cursor > 0 && heap[cursor] < heap[parentOf(cursor)]) {
+        const swapBtn = h('button', { class: 'btn primary' }, `Sift up: swap ${heap[cursor]} with parent ${heap[parentOf(cursor)]}`);
+        swapBtn.addEventListener('click', () => {
+          const p = parentOf(cursor);
+          [heap[cursor], heap[p]] = [heap[p], heap[cursor]];
+          cursor = p;
+          draw();
+          renderControls();
+          status.textContent = cursor > 0 && heap[cursor] < heap[parentOf(cursor)]
+            ? `Still smaller than its new parent (${heap[parentOf(cursor)]}) — keep sifting up.`
+            : 'In place — the heap property holds here now.';
+          if (!(cursor > 0 && heap[cursor] < heap[parentOf(cursor)])) setTimeout(nextInsert, 500);
+        });
+        btnRow.appendChild(swapBtn);
+      }
+    }
+
+    function nextInsert() {
+      if (seqIdx >= sequence.length) {
+        status.textContent = 'All values inserted — the min-heap property (parent ≤ children) holds everywhere. The smallest value is always at the root.';
+        clear(btnRow);
+        onTaskDone();
+        return;
+      }
+      const v = sequence[seqIdx];
+      heap.push(v);
+      cursor = heap.length - 1;
+      seqIdx++;
+      draw();
+      if (cursor > 0 && heap[cursor] < heap[parentOf(cursor)]) {
+        status.textContent = `Inserted ${v} at the next open spot. It's smaller than its parent (${heap[parentOf(cursor)]}) — sift it up.`;
+        renderControls();
+      } else {
+        status.textContent = `Inserted ${v} — already ≥ its parent, no sifting needed.`;
+        clear(btnRow);
+        setTimeout(nextInsert, 500);
+      }
+    }
+
+    root.appendChild(status);
+    root.appendChild(treeWrap);
+    root.appendChild(btnRow);
+    draw();
+    nextInsert();
+  },
+  quiz: [
+    {
+      q: 'Where is the minimum value always located in a min-heap?',
+      options: ['At the root', 'At the last leaf', 'Anywhere — you must search for it'],
+      answer: 0,
+      explain: 'The heap property (parent ≤ children, applied everywhere) guarantees the smallest value floats to the root.',
+    },
+    {
+      q: 'Why is insert into a heap O(log n) rather than O(n)?',
+      options: [
+        'A new value only ever sifts up along one root-to-leaf path, whose length is log n in a complete tree',
+        'Heaps are always small',
+        'It isn\'t — insert is O(n)',
+      ],
+      answer: 0,
+      explain: 'A complete binary tree with n nodes has height about log₂ n, and sifting up touches at most one node per level.',
+    },
+  ],
+});
+
+// ---------- 13. Tree Balancing ----------
+DSA_LEVELS.push({
+  id: 'dsa-avl-rotation',
+  track: 'dsa',
+  title: 'Balanced Trees: Why Rotate?',
+  concept: 'An unbalanced BST degrades to a linked list — rotations fix it',
+  xp: 90,
+  intro: 'Insert 10, 20, 30 (already sorted) into a plain BST and you get a straight right-leaning chain — every operation becomes O(n), no better than a linked list. Self-balancing trees (AVL, Red-Black) detect this and fix it with a <strong>rotation</strong>. Try one yourself.',
+  mount(root, onTaskDone) {
+    const status = h('div', { class: 'status-line' }, 'This is what inserting 10 → 20 → 30 in sorted order produces in a plain BST: a chain, not a tree.');
+    const treeWrap = h('div', { class: 'tree-wrap' });
+    let rotated = false;
+
+    function drawChain() {
+      clear(treeWrap);
+      treeWrap.appendChild(h('div', { style: 'display:flex;flex-direction:column;align-items:center;gap:14px;' }, [
+        h('div', { class: 'tnode' }, '10'),
+        h('div', { style: 'display:flex;gap:30px;' }, [
+          h('div', { class: 'tnode slot' }, '·'),
+          h('div', { style: 'display:flex;flex-direction:column;align-items:center;gap:14px;' }, [
+            h('div', { class: 'tnode path' }, '20'),
+            h('div', { style: 'display:flex;gap:30px;' }, [
+              h('div', { class: 'tnode slot' }, '·'),
+              h('div', { class: 'tnode' }, '30'),
+            ]),
+          ]),
+        ]),
+      ]));
+    }
+    function drawBalanced() {
+      clear(treeWrap);
+      treeWrap.appendChild(h('div', { style: 'display:flex;flex-direction:column;align-items:center;gap:14px;' }, [
+        h('div', { class: 'tnode placed' }, '20'),
+        h('div', { style: 'display:flex;gap:30px;' }, [
+          h('div', { class: 'tnode placed' }, '10'),
+          h('div', { class: 'tnode placed' }, '30'),
+        ]),
+      ]));
+    }
+    drawChain();
+
+    const rotateBtn = h('button', { class: 'btn primary' }, 'Rotate left at 10');
+    rotateBtn.addEventListener('click', () => {
+      if (rotated) return;
+      rotated = true;
+      drawBalanced();
+      status.textContent = 'Rotated! 20 becomes the new root, with 10 and 30 as its children — height dropped from 3 to 2, and every search is faster.';
+      rotateBtn.disabled = true;
+      onTaskDone();
+    });
+
+    root.appendChild(status);
+    root.appendChild(treeWrap);
+    root.appendChild(h('div', { class: 'btn-row' }, [rotateBtn]));
+  },
+  quiz: [
+    {
+      q: 'A plain BST that receives already-sorted input in a straight line will:',
+      options: ['Stay perfectly balanced automatically', 'Degrade into a chain, making search/insert O(n) instead of O(log n)', 'Reject the input'],
+      answer: 1,
+      explain: 'Every new value becomes the right child of the previous one, producing a linked-list shape.',
+    },
+    {
+      q: 'What does a rotation change, structurally?',
+      options: [
+        'It re-sorts every value in the tree',
+        'It locally re-parents a small handful of nodes to reduce height, without breaking the BST ordering property',
+        'It deletes the unbalanced nodes',
+      ],
+      answer: 1,
+      explain: 'A rotation is a constant-time, local restructuring — AVL and Red-Black trees run one after certain inserts/deletes to keep height at O(log n).',
+    },
+  ],
+});
+
+// ---------- 14. Quick Sort ----------
+DSA_LEVELS.push({
+  id: 'dsa-quicksort',
+  track: 'dsa',
+  title: 'Sorting: Quick Sort (Partition)',
+  concept: 'Pick a pivot, partition around it, then recurse',
+  xp: 100,
+  intro: 'Quick sort picks a <strong>pivot</strong> (here, the last element) and partitions the array so everything smaller ends up on its left and everything bigger on its right — then it recurses on each side. Step through one partition pass.',
+  mount(root, onTaskDone) {
+    const arr = [7, 2, 8, 4, 1, 9, 3];
+    const pivot = arr[arr.length - 1];
+    let i = -1; // boundary of the "smaller than pivot" zone
+    let j = 0;
+    let done = false;
+
+    const barsWrap = h('div', { class: 'bars-wrap' });
+    const status = h('div', { class: 'status-line' }, `Pivot = ${pivot} (the last element). Click "Compare next to pivot" to walk through the array.`);
+
+    function draw(activeJ) {
+      clear(barsWrap);
+      const max = Math.max(...arr);
+      arr.forEach((v, idx) => {
+        let cls = 'bar';
+        if (idx === arr.length - 1) cls += ' active';
+        else if (idx <= i) cls += ' sorted';
+        if (idx === activeJ) cls += ' active';
+        barsWrap.appendChild(h('div', { class: cls, style: `height:${(v / max) * 140 + 20}px;` }, String(v)));
+      });
+    }
+    draw();
+
+    const stepBtn = h('button', { class: 'btn primary' }, 'Compare next to pivot');
+    const placeBtn = h('button', { class: 'btn' }, 'Place pivot in final position');
+    placeBtn.disabled = true;
+
+    stepBtn.addEventListener('click', () => {
+      if (j >= arr.length - 1) return;
+      const v = arr[j];
+      if (v < pivot) {
+        i++;
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+        status.textContent = `${v} < pivot (${pivot}) — swapped into the "smaller" zone (position ${i}).`;
+      } else {
+        status.textContent = `${v} ≥ pivot (${pivot}) — left where it is.`;
+      }
+      j++;
+      draw(j < arr.length - 1 ? j : undefined);
+      if (j >= arr.length - 1) {
+        status.textContent += ' Reached the pivot — now place it right after the "smaller" zone.';
+        stepBtn.disabled = true;
+        placeBtn.disabled = false;
+      }
+    });
+
+    placeBtn.addEventListener('click', () => {
+      const last = arr.length - 1;
+      [arr[i + 1], arr[last]] = [arr[last], arr[i + 1]];
+      done = true;
+      draw();
+      status.textContent = `Pivot ${pivot} is now at index ${i + 1} — its FINAL sorted position. Everything left of it is smaller, everything right is bigger. Quick sort now recurses on each side.`;
+      placeBtn.disabled = true;
+      onTaskDone();
+    });
+
+    root.appendChild(status);
+    root.appendChild(barsWrap);
+    root.appendChild(h('div', { class: 'btn-row' }, [stepBtn, placeBtn]));
+  },
+  quiz: [
+    {
+      q: 'After one partition pass, what do we know about the pivot\'s final position?',
+      options: [
+        'Nothing yet, it might move again',
+        'It is in its correct sorted position for good — only the two sides still need sorting',
+        'It is always at index 0',
+      ],
+      answer: 1,
+      explain: 'Partitioning guarantees everything left is smaller and everything right is bigger than the pivot, so the pivot never needs to move again.',
+    },
+    {
+      q: 'Quick sort\'s average-case time complexity is O(n log n), but its worst case is:',
+      options: ['O(n log n) too, always', 'O(n²), when the pivot is repeatedly the smallest or largest element', 'O(log n)'],
+      answer: 1,
+      explain: 'A consistently bad pivot choice (e.g. already-sorted input with last-element pivoting) makes partitions maximally unbalanced.',
+    },
+  ],
+});
+
+// ---------- 15. Dijkstra's Algorithm ----------
+DSA_LEVELS.push({
+  id: 'dsa-dijkstra',
+  track: 'dsa',
+  title: "Dijkstra's Shortest Path",
+  concept: 'Greedily expand from the closest unvisited node',
+  xp: 100,
+  intro: 'Dijkstra\'s algorithm finds shortest paths from a start node in a weighted graph: repeatedly visit the unvisited node with the smallest known distance, then <strong>relax</strong> its edges (update a neighbor\'s distance if going through this node is shorter).',
+  mount(root, onTaskDone) {
+    const edges = { A: { B: 4, C: 1 }, C: { B: 2, D: 8 }, B: { D: 5 }, D: { E: 3 }, E: {} };
+    const nodes = Object.keys(edges);
+    const dist = { A: 0, B: Infinity, C: Infinity, D: Infinity, E: Infinity };
+    const visited = new Set();
+
+    const status = h('div', { class: 'status-line' }, 'Starting at A (distance 0), everything else unknown (∞).');
+    const table = h('div', { class: 'viz-row' });
+
+    function draw() {
+      clear(table);
+      nodes.forEach((n) => {
+        const box = h('div', { class: 'box' + (visited.has(n) ? ' sorted' : '') });
+        box.textContent = `${n}: ${dist[n] === Infinity ? '∞' : dist[n]}`;
+        table.appendChild(box);
+      });
+    }
+    draw();
+
+    const btn = h('button', { class: 'btn primary' }, 'Visit next closest node');
+    btn.addEventListener('click', () => {
+      const unvisited = nodes.filter((n) => !visited.has(n));
+      if (unvisited.length === 0) return;
+      const current = unvisited.reduce((best, n) => (dist[n] < dist[best] ? n : best), unvisited[0]);
+      visited.add(current);
+      let log = `Visiting ${current} (distance ${dist[current]}), the closest unvisited node.`;
+      Object.entries(edges[current]).forEach(([neighbor, weight]) => {
+        const candidate = dist[current] + weight;
+        if (candidate < dist[neighbor]) {
+          dist[neighbor] = candidate;
+          log += ` Relaxed ${current}→${neighbor}: new distance ${candidate}.`;
+        }
+      });
+      draw();
+      status.textContent = log;
+      if (visited.size === nodes.length) {
+        status.textContent += ' All nodes visited — every distance shown is now the true shortest distance from A.';
+        btn.disabled = true;
+        onTaskDone();
+      }
+    });
+
+    root.appendChild(status);
+    root.appendChild(table);
+    root.appendChild(h('div', { class: 'btn-row' }, [btn]));
+  },
+  quiz: [
+    {
+      q: 'Why does Dijkstra always visit the closest unvisited node next?',
+      options: [
+        'Because once it\'s the closest remaining candidate, no other path (through still-unvisited, farther nodes) could possibly reach it more cheaply',
+        'It doesn\'t matter which order you visit nodes in',
+        'To visit nodes alphabetically',
+      ],
+      answer: 0,
+      explain: 'This greedy choice is the crux of why Dijkstra is correct: a shorter path through a farther, unvisited node is impossible since all edge weights are non-negative.',
+    },
+    {
+      q: 'Dijkstra\'s algorithm does NOT work correctly if the graph has:',
+      options: ['More than 5 nodes', 'Negative edge weights', 'Cycles'],
+      answer: 1,
+      explain: 'Negative weights break the greedy assumption — a "closest" node might later be beaten by a path through a negative edge. (Bellman-Ford handles that case.)',
+    },
+  ],
+});
+
+// ---------- 16. Topological Sort ----------
+DSA_LEVELS.push({
+  id: 'dsa-topological-sort',
+  track: 'dsa',
+  title: 'Topological Sort',
+  concept: 'Order tasks so every prerequisite comes first',
+  xp: 90,
+  intro: 'A topological sort orders the nodes of a DAG (directed, acyclic graph) so every edge points forward — perfect for course prerequisites or build steps. Repeatedly "take" any course whose prerequisites are already done.',
+  mount(root, onTaskDone) {
+    const deps = { CS101: [], MATH101: [], CS201: ['CS101'], CS301: ['CS201', 'MATH101'], CS401: ['CS301'] };
+    const taken = new Set();
+    const order = [];
+    const allNodes = Object.keys(deps);
+
+    const status = h('div', { class: 'status-line' }, 'Click any course whose prerequisites are already taken.');
+    const grid = h('div', { class: 'viz-row' });
+    const orderLine = h('div', { class: 'hint-line' }, 'Order so far: (none yet)');
+
+    function ready(n) { return deps[n].every((d) => taken.has(d)); }
+
+    function draw() {
+      clear(grid);
+      allNodes.forEach((n) => {
+        if (taken.has(n)) return;
+        const box = h('div', { class: 'box' + (ready(n) ? ' hi' : '') });
+        box.appendChild(document.createTextNode(n));
+        const reqLine = h('span', { class: 'idx' }, deps[n].length ? `needs ${deps[n].join(', ')}` : 'no prereqs');
+        box.appendChild(reqLine);
+        box.addEventListener('click', () => {
+          if (!ready(n)) {
+            status.textContent = `${n} still needs: ${deps[n].filter((d) => !taken.has(d)).join(', ')}.`;
+            return;
+          }
+          taken.add(n);
+          order.push(n);
+          orderLine.textContent = 'Order so far: ' + order.join(' → ');
+          status.textContent = `Took ${n}. ${allNodes.length - taken.size} course(s) left.`;
+          draw();
+          if (taken.size === allNodes.length) {
+            status.textContent += ' Every prerequisite is satisfied in this order — that\'s a valid topological sort.';
+            onTaskDone();
+          }
+        });
+        grid.appendChild(box);
+      });
+    }
+    draw();
+
+    root.appendChild(status);
+    root.appendChild(grid);
+    root.appendChild(orderLine);
+  },
+  quiz: [
+    {
+      q: 'Topological sort only makes sense on a graph that is:',
+      options: ['Directed and acyclic (a DAG)', 'Undirected', 'Weighted'],
+      answer: 0,
+      explain: 'A cycle would mean two nodes each require the other first — no valid order could satisfy that.',
+    },
+    {
+      q: 'The "take any node whose prerequisites are done" approach used here is known as:',
+      options: ["Kahn's algorithm (repeatedly removing zero-in-degree nodes)", "Dijkstra's algorithm", 'Binary search'],
+      answer: 0,
+      explain: 'Kahn\'s algorithm tracks in-degree (remaining unmet prerequisites) and repeatedly takes nodes that reach zero.',
+    },
+  ],
+});
+
+// ---------- 17. Union-Find ----------
+DSA_LEVELS.push({
+  id: 'dsa-union-find',
+  track: 'dsa',
+  title: 'Union-Find (Disjoint Sets)',
+  concept: 'Track which elements are connected, efficiently',
+  xp: 90,
+  intro: 'Union-Find tracks groups of connected elements with two operations: <span class="inline-code">union(a, b)</span> merges two groups, and <span class="inline-code">find(a)</span> tells you which group <span class="inline-code">a</span> belongs to. It\'s the engine behind cycle detection and Kruskal\'s minimum spanning tree.',
+  mount(root, onTaskDone) {
+    const items = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const colors = ['#f2711c', '#17a865', '#2563eb', '#a855f7', '#eab308', '#ec4899'];
+    let group = {}; // item -> color index
+    items.forEach((it, i) => { group[it] = i; });
+    const unions = [['A', 'B'], ['C', 'D'], ['B', 'C']];
+    let unionIdx = 0;
+
+    const status = h('div', { class: 'status-line' }, `Perform this queue of unions: ${unions.map((u) => `union(${u[0]},${u[1]})`).join(', ')}.`);
+    const row = h('div', { class: 'viz-row' });
+
+    function draw() {
+      clear(row);
+      items.forEach((it) => {
+        const box = h('div', { class: 'box' }, it);
+        box.style.borderColor = colors[group[it]];
+        box.style.boxShadow = `0 0 0 2px ${colors[group[it]]}33`;
+        row.appendChild(box);
+      });
+    }
+    draw();
+
+    const unionBtn = h('button', { class: 'btn primary' }, `Union(${unions[0][0]}, ${unions[0][1]})`);
+    const findBtn = h('button', { class: 'btn' }, 'Check: are A and D connected?');
+    findBtn.style.display = 'none';
+
+    unionBtn.addEventListener('click', () => {
+      const [a, b] = unions[unionIdx];
+      const from = group[b];
+      const to = group[a];
+      items.forEach((it) => { if (group[it] === from) group[it] = to; });
+      unionIdx++;
+      draw();
+      if (unionIdx >= unions.length) {
+        status.textContent = `Unioned ${a} and ${b}. All unions done — now check connectivity.`;
+        unionBtn.style.display = 'none';
+        findBtn.style.display = '';
+      } else {
+        status.textContent = `Unioned ${a} and ${b} — same color now. Next: union(${unions[unionIdx][0]}, ${unions[unionIdx][1]}).`;
+        unionBtn.textContent = `Union(${unions[unionIdx][0]}, ${unions[unionIdx][1]})`;
+      }
+    });
+
+    findBtn.addEventListener('click', () => {
+      const connected = group['A'] === group['D'];
+      status.textContent = connected
+        ? 'find(A) == find(D): YES, they\'re connected — A-B, C-D, and B-C chain them all together.'
+        : 'find(A) != find(D): not connected.';
+      findBtn.disabled = true;
+      onTaskDone();
+    });
+
+    root.appendChild(status);
+    root.appendChild(row);
+    root.appendChild(h('div', { class: 'btn-row' }, [unionBtn, findBtn]));
+  },
+  quiz: [
+    {
+      q: 'After union(A,B), union(C,D), and union(B,C), which of these is true?',
+      options: ['A, B, C, and D are all in the same group', 'Only B and C are connected', 'Nothing is connected'],
+      answer: 0,
+      explain: 'Union is transitive through shared elements: A-B and B-C and C-D chain everything into one group.',
+    },
+    {
+      q: 'What is "path compression" used for in a real Union-Find implementation?',
+      options: [
+        'Making find() flatten the tree so future lookups are nearly O(1)',
+        'Compressing the data to save memory',
+        'Sorting the elements',
+      ],
+      answer: 0,
+      explain: 'Path compression re-points nodes directly to their root during find(), so repeated queries get faster over time.',
+    },
+  ],
+});
+
+// ---------- 18. Dynamic Programming: 0/1 Knapsack ----------
+DSA_LEVELS.push({
+  id: 'dsa-knapsack',
+  track: 'dsa',
+  title: 'Dynamic Programming: 0/1 Knapsack',
+  concept: 'At each item, either skip it or take it — whichever is better',
+  xp: 100,
+  intro: 'You have a bag with capacity 7. For each item you can only skip or take it (no splitting). The DP idea: for item <span class="inline-code">i</span> and remaining capacity <span class="inline-code">w</span>, the best value is <span class="inline-code">max(skip it, take it + best value with the leftover capacity)</span>. Work out the final decision.',
+  mount(root, onTaskDone) {
+    const capacity = 7;
+    const items = [{ w: 2, v: 3 }, { w: 3, v: 4 }, { w: 4, v: 5 }, { w: 5, v: 6 }];
+    // Precomputed best value using only the first 3 items, for each capacity (given to the learner).
+    const bestWithout = { 0: 0, 1: 0, 2: 3, 3: 4, 4: 7, 5: 8, 6: 9, 7: 9 };
+    const last = items[3]; // w:5, v:6
+
+    const status = h('div', { class: 'status-line' }, 'Table for the first 3 items is already filled in below. Now decide the last item (weight 5, value 6) at full capacity (7).');
+    const info = h('div', {});
+    info.appendChild(codeBlock(`best_without_last_item[7] = ${bestWithout[7]}   # already known\nskip_value  = best_without_last_item[7]              = ${bestWithout[7]}\ntake_value  = ${last.v} + best_without_last_item[7 - ${last.w}] = ${last.v} + ${bestWithout[capacity - last.w]} = ${last.v + bestWithout[capacity - last.w]}`, 'js'));
+
+    const skipVal = bestWithout[capacity];
+    const takeVal = last.v + bestWithout[capacity - last.w];
+    const correct = Math.max(skipVal, takeVal);
+
+    const btnRow = h('div', { class: 'btn-row' });
+    const skipBtn = h('button', { class: 'btn' }, `Skip it → value = ${skipVal}`);
+    const takeBtn = h('button', { class: 'btn' }, `Take it → value = ${takeVal}`);
+    [[skipBtn, skipVal], [takeBtn, takeVal]].forEach(([btn, val]) => {
+      btn.addEventListener('click', () => {
+        if (val === correct) {
+          status.textContent = `Correct — ${val} is the best you can do. max(skip=${skipVal}, take=${takeVal}) = ${correct}.`;
+          skipBtn.disabled = true;
+          takeBtn.disabled = true;
+          onTaskDone();
+        } else {
+          status.textContent = `That's worse than the other option — DP always takes the max of the two choices. Try the other button.`;
+        }
+      });
+    });
+    btnRow.appendChild(skipBtn);
+    btnRow.appendChild(takeBtn);
+
+    root.appendChild(status);
+    root.appendChild(info);
+    root.appendChild(btnRow);
+  },
+  quiz: [
+    {
+      q: 'Why is this called "0/1" knapsack?',
+      options: ['You can only take 0 or 1 items total', 'Each item is either fully taken (1) or fully skipped (0) — no partial items', 'It only works with binary numbers'],
+      answer: 1,
+      explain: 'The "fractional knapsack" variant (where you can take part of an item) is solved differently, greedily.',
+    },
+    {
+      q: 'What makes this a dynamic programming problem rather than plain recursion?',
+      options: [
+        'It looks up already-solved smaller subproblems (best value at smaller capacities) instead of recomputing them',
+        'It uses a for loop',
+        'It only works on sorted items',
+      ],
+      answer: 0,
+      explain: 'Just like memoized Fibonacci, the DP table reuses previously computed "best value at capacity w" answers instead of recursing from scratch.',
+    },
+  ],
+});
