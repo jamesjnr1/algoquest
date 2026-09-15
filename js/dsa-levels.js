@@ -8,6 +8,21 @@ DSA_LEVELS.push({
   concept: 'How we measure algorithm speed',
   xp: 60,
   intro: 'Big-O describes how an algorithm\'s work grows as the input size <span class="inline-code">n</span> grows. It ignores constants and focuses on the trend. Drag/click to reorder these six growth rates from <strong>fastest</strong> to <strong>slowest</strong>.',
+  theory: `
+    <h4>Why we ignore constants</h4>
+    <p>Two algorithms that do "n" and "3n" work are both O(n) &mdash; the 3 is a constant factor that a faster computer or a small optimization changes, but it doesn't change how the algorithm SCALES as n grows. Big-O is about the shape of the growth curve, not the exact runtime.</p>
+    ${diagramBigOGrowth()}
+    <h4>Reading the chart</h4>
+    <p>At small n, the differences barely matter. As n grows into the thousands or millions, O(n) and O(n²) diverge explosively &mdash; that gap is the entire reason algorithm choice matters for real-world performance. An O(n²) algorithm that's "fine" on 100 items can become unusable on 100,000.</p>
+    <h4>The common classes, fastest to slowest</h4>
+    <ul>
+      <li><strong>O(1)</strong> &mdash; constant: same work regardless of input size (array index access)</li>
+      <li><strong>O(log n)</strong> &mdash; logarithmic: halves the problem each step (binary search)</li>
+      <li><strong>O(n)</strong> &mdash; linear: one pass over the input (linear search)</li>
+      <li><strong>O(n log n)</strong> &mdash; linearithmic: the best possible for comparison-based sorting (merge sort)</li>
+      <li><strong>O(n²)</strong> &mdash; quadratic: comparing every pair (bubble sort, nested loops)</li>
+    </ul>
+  `,
   mount(root, onTaskDone) {
     const items = [
       { id: '1', label: 'O(1) — constant time' },
@@ -151,6 +166,15 @@ DSA_LEVELS.push({
   concept: 'LIFO vs FIFO, and the bracket-matching trick',
   xp: 70,
   intro: 'A <strong>stack</strong> is Last-In-First-Out (like a plate stack): you only ever add/remove from the top. A <strong>queue</strong> is First-In-First-Out (like a line at a shop). Stacks are perfect for checking whether brackets are balanced — push every opening bracket, and every closing bracket must match the top of the stack.',
+  theory: `
+    ${diagramStackQueue()}
+    <h4>Stack: only the top is reachable</h4>
+    <p><span class="inline-code">push</span> adds to the top, <span class="inline-code">pop</span> removes the top, <span class="inline-code">peek</span> looks without removing. All three are O(1). Real uses: undo history, the "back" button in a browser, and a call stack for function calls (see the Recursion level).</p>
+    <h4>Queue: FIFO order</h4>
+    <p><span class="inline-code">enqueue</span> adds to the back, <span class="inline-code">dequeue</span> removes from the front. Real uses: task scheduling, print queues, and breadth-first search (see the Graphs level).</p>
+    <h4>Why a stack solves bracket matching</h4>
+    <p>Every opening bracket must be closed by the SAME type, in reverse order of when it opened &mdash; that "reverse order" requirement is exactly what a stack gives you for free. Push on open, pop-and-compare on close; if anything mismatches or is left over, the expression isn't balanced.</p>
+  `,
   mount(root, onTaskDone) {
     const tokens = '{[(3)+(4)]}'.split('');
     const pairs = { ')': '(', ']': '[', '}': '{' };
@@ -249,6 +273,13 @@ DSA_LEVELS.push({
   concept: 'Nodes + pointers, and reversing one step at a time',
   xp: 70,
   intro: 'A linked list is a chain of nodes, each holding a value and a pointer to the next node. Unlike arrays, nodes are not contiguous in memory — you can insert/delete in O(1) if you already have a reference, but you can\'t jump to index k without walking the chain. Let\'s reverse a list iteratively, one pointer flip at a time.',
+  theory: `
+    ${diagramLinkedListPic()}
+    <h4>Array vs. linked list</h4>
+    <p>An array is one contiguous block of memory &mdash; fast random access (O(1)), but inserting/deleting in the middle means shifting everything after it (O(n)). A linked list scatters nodes anywhere in memory, connected by pointers &mdash; inserting/deleting is O(1) once you have a reference to the right spot, but reaching index k means walking k pointers (O(n)), no shortcuts.</p>
+    <h4>Reversing, iteratively</h4>
+    <p>The standard pattern keeps three pointers: <span class="inline-code">prev</span>, <span class="inline-code">curr</span>, and a temporary <span class="inline-code">next</span>. Each step: save curr's next (or you'll lose the rest of the list), point curr's next backward at prev, then slide prev and curr forward by one. Repeat until curr is null &mdash; prev is now the new head.</p>
+  `,
   mount(root, onTaskDone) {
     const values = [3, 9, 2, 7];
     let reversedUpTo = 0; // how many links (from the front) have been flipped
@@ -320,6 +351,17 @@ DSA_LEVELS.push({
   concept: 'Base cases, call stacks, and unwinding',
   xp: 80,
   intro: 'Recursion solves a problem by calling itself on a smaller version, until a <strong>base case</strong> stops the calls. Every call gets its own frame pushed onto the call stack; once the base case returns, frames pop and combine results on the way back up. Build <span class="inline-code">factorial(4)</span> by hand.',
+  theory: `
+    ${diagramRecursionCallStack()}
+    <h4>Two ingredients every recursive function needs</h4>
+    <ul>
+      <li><strong>Base case</strong> &mdash; the simplest input, answered directly without recursing (factorial(1) = 1)</li>
+      <li><strong>Recursive case</strong> &mdash; solve a SMALLER version of the same problem, then combine it into the answer (factorial(n) = n × factorial(n-1))</li>
+    </ul>
+    <p>Miss the base case (or never actually shrink toward it) and you get infinite recursion &mdash; which crashes with a stack overflow once too many frames pile up.</p>
+    <h4>The call stack, concretely</h4>
+    <p>Each call doesn't finish until the ones it calls finish first. factorial(4) calls factorial(3), which calls factorial(2), which calls factorial(1) &mdash; each waiting, stacked on top of the last. Only once factorial(1) returns does the unwinding begin: each waiting call multiplies its n by the result it gets back, popping off the stack as it goes.</p>
+  `,
   mount(root, onTaskDone) {
     let frames = [{ n: 4, result: null }];
     const stackRow = h('div', { class: 'viz-row' });
@@ -402,6 +444,15 @@ DSA_LEVELS.push({
   concept: 'Insert by comparison; smaller goes left, larger goes right',
   xp: 90,
   intro: 'A Binary Search Tree keeps every node\'s left subtree smaller and right subtree larger. To insert a value, compare it against nodes starting at the root and go left or right until you find an empty spot. Insert this sequence: <strong>50, 30, 70, 20, 40</strong>.',
+  theory: `
+    ${diagramBSTPic()}
+    <h4>The BST invariant</h4>
+    <p>At EVERY node in the tree, everything in its left subtree is smaller and everything in its right subtree is larger. This holds recursively all the way down &mdash; not just for the root, but for every single node, which is what makes search fast.</p>
+    <h4>Why search is O(log n) (when balanced)</h4>
+    <p>Each comparison eliminates an entire subtree from consideration, exactly like binary search on a sorted array. A tree with n nodes, kept roughly balanced, has height around log₂(n) &mdash; so search, insert, and delete all cost O(log n) in the typical case.</p>
+    <h4>The catch: it can become unbalanced</h4>
+    <p>Insert already-sorted data (10, 20, 30, ...) and a plain BST degenerates into a straight chain &mdash; O(n) height, no better than a linked list. Self-balancing trees like AVL and Red-Black trees exist specifically to prevent this (see the "Balanced Trees" level).</p>
+  `,
   mount(root, onTaskDone) {
     let treeRoot = null;
     const sequence = [50, 30, 70, 20, 40];
@@ -439,12 +490,12 @@ DSA_LEVELS.push({
       const v = sequence[seqIdx];
       if (!treeRoot) {
         treeRoot = { value: v, left: null, right: null };
-        status.textContent = `${v} became the root (tree was empty). Next value: ${sequence[seqIdx + 1] ?? '(done)'}.`;
+        status.textContent = `${v} became the root (tree was empty).`;
         seqIdx++;
         cursor = null;
         draw();
-        renderControls();
-        if (seqIdx >= sequence.length) finish();
+        if (seqIdx >= sequence.length) { finish(); return; }
+        nextValue(); // immediately set up the comparison for the next value
         return;
       }
       cursor = treeRoot;
@@ -484,6 +535,7 @@ DSA_LEVELS.push({
         seqIdx++;
         cursor = null;
         draw();
+        clear(btnRow); // no clickable buttons should remain while cursor is null
         if (seqIdx >= sequence.length) { finish(); return; }
         status.textContent += ` Next value: ${sequence[seqIdx]}.`;
         setTimeout(nextValue, 400);
@@ -683,6 +735,15 @@ DSA_LEVELS.push({
   concept: 'Exploring level by level with a queue, guaranteeing the shortest path',
   xp: 90,
   intro: 'BFS explores a graph outward in rings: visit the start, then all its neighbors, then all of THEIR unvisited neighbors, and so on — using a queue behind the scenes. That order guarantees the first time you reach the target, you\'ve found a shortest path. Click the highlighted "frontier" cells in any order to expand outward and reach the target.',
+  theory: `
+    ${diagramGraphBFSPic()}
+    <h4>Graphs, briefly</h4>
+    <p>A graph is just nodes connected by edges &mdash; more general than a tree (a tree is a graph with no cycles). Graphs model anything with relationships: road networks, social connections, dependencies between tasks.</p>
+    <h4>Why BFS guarantees shortest path</h4>
+    <p>BFS uses a queue and processes nodes in the exact order they're discovered. That means it fully finishes an entire "ring" (every node at distance k) before touching anything at distance k+1. The very first time the target is reached, it's necessarily via the fewest possible edges &mdash; there's no way a node discovered later (farther out) could offer a shorter path.</p>
+    <h4>BFS vs. DFS</h4>
+    <p>Depth-First Search explores as far as possible down ONE path before backtracking (using a stack or recursion instead of a queue). DFS is often simpler to write and uses less memory on wide graphs, but it does NOT guarantee the shortest path the way BFS does.</p>
+  `,
   mount(root, onTaskDone) {
     const rows = ['S....', '.##..', '.#...', '...#.', '##..T'];
     const R = rows.length, C = rows[0].length;
@@ -782,6 +843,15 @@ DSA_LEVELS.push({
   concept: 'O(1)-ish lookup via a hash function, and handling collisions',
   xp: 90,
   intro: 'A hash table converts a key into a bucket index using a hash function (here, <span class="inline-code">key % 5</span>), so lookup is close to O(1) on average. When two keys land in the same bucket, that\'s a <strong>collision</strong> — this table resolves it by chaining (a small list per bucket).',
+  theory: `
+    ${diagramHashPic()}
+    <h4>The core trick</h4>
+    <p>A hash function takes ANY key and deterministically converts it into a number, which is then reduced to a valid bucket index (usually via <span class="inline-code">% table_size</span>). The same key always hashes to the same bucket, so lookup means: hash the key, jump straight to that bucket, done &mdash; no scanning required.</p>
+    <h4>Collisions are inevitable</h4>
+    <p>With far more possible keys than buckets, two different keys WILL sometimes land in the same bucket. Chaining handles this by keeping a small list at each bucket; on collision, you just check the (usually short) list for a match. As long as keys spread out reasonably evenly, each bucket only ever holds a handful of items.</p>
+    <h4>Why this matters</h4>
+    <p>Hash tables back Python's <span class="inline-code">dict</span> and <span class="inline-code">set</span>, giving average O(1) lookup/insert/delete regardless of how many items are stored &mdash; a huge upgrade over scanning a list (O(n)) to check membership.</p>
+  `,
   mount(root, onTaskDone) {
     const keys = [3, 8, 1, 6, 12];
     const size = 5;

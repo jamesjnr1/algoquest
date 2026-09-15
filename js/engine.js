@@ -11,11 +11,16 @@ const RANKS = [
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { xp: 0, completed: {}, streakDates: [] };
+    if (!raw) return { xp: 0, completed: {}, streakDates: [], stars: {} };
     const parsed = JSON.parse(raw);
-    return { xp: parsed.xp || 0, completed: parsed.completed || {}, streakDates: parsed.streakDates || [] };
+    return {
+      xp: parsed.xp || 0,
+      completed: parsed.completed || {},
+      streakDates: parsed.streakDates || [],
+      stars: parsed.stars || {},
+    };
   } catch (e) {
-    return { xp: 0, completed: {}, streakDates: [] };
+    return { xp: 0, completed: {}, streakDates: [], stars: {} };
   }
 }
 
@@ -34,8 +39,11 @@ function rankFor(xp) {
 const Store = {
   state: loadState(),
   isComplete(id) { return !!this.state.completed[id]; },
-  complete(id, xp) {
-    if (this.isComplete(id)) return false;
+  starsFor(id) { return this.state.stars[id] || 0; },
+  complete(id, xp, stars) {
+    const alreadyDone = this.isComplete(id);
+    if (stars > this.starsFor(id)) this.state.stars[id] = stars;
+    if (alreadyDone) { saveState(this.state); return false; }
     this.state.completed[id] = true;
     this.state.xp += xp;
     const today = dateStr(new Date());
@@ -44,7 +52,7 @@ const Store = {
     return true;
   },
   reset() {
-    this.state = { xp: 0, completed: {}, streakDates: [] };
+    this.state = { xp: 0, completed: {}, streakDates: [], stars: {} };
     saveState(this.state);
   },
 };
