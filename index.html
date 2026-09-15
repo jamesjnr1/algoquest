@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AlgoQuest — Learn DSA &amp; R by Playing</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🗺️ <span>AlgoQuest</span></div>
+    <div class="tracks" id="track-tabs"></div>
+    <div class="xp-wrap">
+      <div class="xp-label">XP <span id="xp-value">0</span></div>
+      <div class="xp-bar"><div class="xp-fill" id="xp-fill"></div></div>
+      <div class="level-badge" id="rank-badge">Novice</div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="map" id="level-map"></aside>
+    <section class="stage" id="stage">
+      <div class="welcome">
+        <h1>Welcome to AlgoQuest</h1>
+        <p>Pick a world on the left. <strong>DSA Isle</strong> teaches Data Structures &amp; Algorithms by letting
+          you push, pop, insert, and search things with your own clicks. <strong>R Harbor</strong> teaches R by
+          having you predict, build, and query real R snippets. Every level ends with a short check to lock in
+          the idea. Your progress is saved automatically in this browser.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/engine.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/dsa-levels.js"></script>
+  <script src="js/r-levels.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
