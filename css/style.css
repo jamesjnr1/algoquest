@@ -19,6 +19,8 @@
   --r-tint: #e6f8ee;
   --py-color: #2563eb;
   --py-tint: #e8f0fe;
+  --pycore-color: #7c3aed;
+  --pycore-tint: #f3e8ff;
   font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -151,6 +153,7 @@ body {
 .tag.dsa { background: var(--dsa-tint); color: var(--dsa-color); }
 .tag.r { background: var(--r-tint); color: var(--r-color); }
 .tag.py { background: var(--py-tint); color: var(--py-color); }
+.tag.pycore { background: var(--pycore-tint); color: var(--pycore-color); }
 
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
 
@@ -165,6 +168,7 @@ body {
 .lvl-card-top.dsa { background: var(--dsa-color); }
 .lvl-card-top.r { background: var(--r-color); }
 .lvl-card-top.py { background: var(--py-color); }
+.lvl-card-top.pycore { background: var(--pycore-color); }
 .lvl-card-body { padding: 16px 18px; }
 .lvl-card-tags { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .lvl-card h3 { margin: 0 0 6px; font-size: 0.98rem; }
@@ -201,6 +205,21 @@ body {
 .level-intro { color: var(--muted); line-height: 1.65; margin: 10px 0 22px; max-width: 720px; font-size: 0.92rem; }
 
 .section-title { font-weight: 600; margin: 22px 0 10px; color: var(--text); font-size: 0.98rem; }
+
+.theory-block { color: var(--text); line-height: 1.7; font-size: 0.92rem; max-width: 760px; }
+.theory-block h4 { font-size: 0.95rem; margin: 18px 0 6px; }
+.theory-block h4:first-child { margin-top: 0; }
+.theory-block p { margin: 0 0 12px; }
+.theory-block ul, .theory-block ol { margin: 0 0 12px; padding-left: 20px; }
+.theory-block li { margin-bottom: 4px; }
+.theory-block strong { color: var(--text); }
+.theory-block table { border-collapse: collapse; margin: 10px 0 16px; font-size: 0.85rem; }
+.theory-block th, .theory-block td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; }
+.theory-block th { background: var(--panel-2); }
+
+.diagram { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 14px 0; }
+.diagram svg { width: 100%; height: auto; display: block; }
+.diagram-caption { text-align: center; font-size: 0.78rem; color: var(--muted); margin-top: 8px; }
 
 .btn {
   background: var(--panel-2);

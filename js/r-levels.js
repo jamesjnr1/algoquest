@@ -57,6 +57,15 @@ R_LEVELS.push({
   concept: 'R\'s core building block: the vector',
   xp: 60,
   intro: 'In R, even a single number is a vector of length 1. You build vectors with <span class="inline-code">c(...)</span> ("combine"). Click the correct values, in order, to build the target vector.',
+  theory: `
+    ${diagramVectorPic()}
+    <h4>Everything is a vector</h4>
+    <p>Unlike most languages, R has no separate "scalar" type &mdash; typing <span class="inline-code">x &lt;- 5</span> creates a vector of length 1. This is why vectorized operations (the next level) feel so natural: a single number and a list of a million numbers are the same kind of object, just different lengths.</p>
+    <h4>1-based indexing</h4>
+    <p>R counts from 1, not 0. <span class="inline-code">x[1]</span> is the FIRST element &mdash; a constant source of bugs for anyone coming from Python, JavaScript, or C.</p>
+    <h4>Vectors are homogeneous</h4>
+    <p>Every element in a vector must be the same type. <span class="inline-code">c(1, "two", 3)</span> silently converts everything to character (text) rather than erroring &mdash; a common gotcha. Need to mix types on purpose? That's what a <span class="inline-code">list</span> is for.</p>
+  `,
   mount(root, onTaskDone) {
     const target = [4, 8, 15, 16, 23];
     const pool = shuffle([...target, 7, 42, 99]);
@@ -230,6 +239,15 @@ R_LEVELS.push({
   concept: 'R\'s table type: columns of vectors, rows of observations',
   xp: 90,
   intro: 'A data frame is R\'s table: each column is a vector (all the same length), and each row is one observation. Columns are usually pulled out with <span class="inline-code">df$column</span>, and rows are filtered with <span class="inline-code">df[condition, ]</span>.',
+  theory: `
+    ${diagramDataFramePic()}
+    <h4>A data frame is a list of equal-length vectors</h4>
+    <p>Each column is its own vector (so a column must be all-numeric, or all-character, etc.), but different columns can have different types &mdash; that's exactly why a data frame is a <span class="inline-code">list</span> of vectors under the hood, not a matrix.</p>
+    <h4>Selecting columns vs. filtering rows</h4>
+    <p><span class="inline-code">df$age</span> or <span class="inline-code">df[, "age"]</span> pulls out a whole column. <span class="inline-code">df[df$age &gt; 18, ]</span> keeps only the ROWS where the condition is true, using a logical vector to index &mdash; the same logical-indexing idea from the Indexing &amp; Subsetting level, just applied to rows instead of a plain vector.</p>
+    <h4>Why this matters</h4>
+    <p>Data frames are the standard shape for real datasets in R &mdash; this pattern (column = variable, row = observation) is exactly what you'll load from a CSV file and feed into almost every statistics or plotting function.</p>
+  `,
   mount(root, onTaskDone) {
     const rows = [
       { name: 'Ann', age: 22, score: 88 },
@@ -508,6 +526,13 @@ R_LEVELS.push({
   concept: 'Mixed types in one structure, with two flavors of indexing',
   xp: 80,
   intro: 'Unlike a vector, a <span class="inline-code">list</span> can hold different types together (numbers, strings, even other lists). This makes indexing trickier: single brackets <span class="inline-code">[ ]</span> return a smaller list, while double brackets <span class="inline-code">[[ ]]</span> "unwrap" to the actual element inside.',
+  theory: `
+    ${diagramListPic()}
+    <h4>Why lists exist</h4>
+    <p>Vectors require every element to be the same type. The moment you need to bundle a name (character), an age (numeric), and a flag (logical) together, you need a list &mdash; and in fact, a data frame IS a list of equal-length vectors underneath.</p>
+    <h4>[ ] vs [[ ]] &mdash; the classic gotcha</h4>
+    <p>Single brackets always return a smaller LIST, even for one element: <span class="inline-code">my_list[1]</span> is still a list containing one thing. Double brackets unwrap it: <span class="inline-code">my_list[[1]]</span> gives you the actual value inside, with no list wrapper. Reach for <span class="inline-code">[[ ]]</span> (or <span class="inline-code">$name</span>) when you want the real value to compute with.</p>
+  `,
   mount(root, onTaskDone) {
     const roundWrap = h('div', {});
     root.appendChild(h('div', { class: 'hint-line' }, `my_list <- list(name = "Ann", age = 25, active = TRUE)`));

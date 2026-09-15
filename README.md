@@ -1,25 +1,46 @@
 # AlgoQuest
 
-A browser-based way to learn **Data Structures & Algorithms**, **Python**, and **R** from scratch, before the semester starts. No build step, no accounts, no server — plain HTML/CSS/JS that saves your progress in the browser. Python code runs for real, in-browser, via [Pyodide](https://pyodide.org/) (CPython compiled to WebAssembly).
+A browser-based way to learn **Python (from scratch to OOP)**, **Data Structures & Algorithms**, and **R**, before the semester starts. No build step, no accounts, no server — plain HTML/CSS/JS that saves your progress in the browser. Python code runs for real, in-browser, via [Pyodide](https://pyodide.org/) (CPython compiled to WebAssembly).
 
-Three tracks, three ways of learning by doing:
+Four tracks, covering theory and practice differently:
 
-- **DSA Isle** — interact directly with the data structure. Push and pop your own stack to check whether brackets are balanced. Reverse a linked list one pointer-flip at a time. Build the call stack for `factorial(4)` by hand. Insert values into a BST by comparing left/right yourself. Step through bubble sort and count the comparisons. Explore a maze with BFS using a real frontier queue.
-- **Python Lab** — write actual Python and get graded. Each level gives you a starter function or class with `TODO`s; click "Run tests" and your code executes for real against a small test suite, with pass/fail feedback per test (expected vs. actual, or the real Python error if your code crashes). No plausible-looking fake grading — it's genuinely running your code.
-- **R Harbor** — predict, build, and query real R snippets: vectors, 1-based indexing, data frames, vectorized thinking.
+- **Python Core** — the language itself, start to finish: variables and types, operators, strings, lists/tuples/sets/dicts, control flow, functions, lambdas, exceptions, modules, iterators/generators, decorators, and a full object-oriented programming arc (classes, inheritance, encapsulation, dunder methods). Every level opens with a **Theory** section — proper explanations with diagrams, not just a one-liner — followed by real Python you write and that gets graded automatically.
+- **DSA Isle** — interact directly with the data structure. Push and pop your own stack to check whether brackets are balanced. Reverse a linked list one pointer-flip at a time. Build the call stack for `factorial(4)` by hand. Insert values into a BST by comparing left/right yourself.
+- **Python Lab** — the same core algorithms as DSA Isle, but now as real, tested Python: quick sort, a hand-built heap, Dijkstra, a trie, dynamic programming, and more.
+- **R Harbor** — predict, build, and query real R snippets: vectors, 1-based indexing, data frames, matrices, basic statistics.
 
 Every level ends with a short "Quick check" to lock in the idea, then awards XP. XP and completed levels are saved in `localStorage`, so you can close the tab and pick up where you left off.
 
 ## Play it
 
-No install needed — it's static HTML/CSS/JS, though Python Lab needs an internet connection the first time it downloads the Python runtime (~12 MB, cached by the browser after that).
+No install needed — it's static HTML/CSS/JS, though the Python-executing tracks need an internet connection the first time they download the Python runtime (~12 MB, cached by the browser after that).
 
 - **Locally:** open `index.html` directly in your browser, or run a tiny local server from this folder, e.g. `python3 -m http.server 8000` and visit `http://localhost:8000`.
 - **GitHub Pages:** in this repo's Settings → Pages, set the source to the `main` branch, root folder. Your game will be live at the generated `github.io` URL.
 
 ## What's covered
 
-**55 levels total** — enough to fill a full semester's worth of study sessions, not an afternoon.
+**73 levels total** — enough to fill a full semester's worth of study sessions, not an afternoon.
+
+**Python Core** (18 levels — full theory + diagrams, then real graded code)
+1. Variables & Data Types
+2. Operators & Type Conversion
+3. Strings
+4. Lists & List Comprehensions
+5. Tuples & Sets
+6. Dictionaries
+7. Control Flow: if / elif / else
+8. Loops: for & while
+9. Functions & Arguments
+10. Lambda & Higher-Order Functions
+11. Exception Handling
+12. Modules & Imports
+13. Iterators & Generators
+14. Decorators
+15. OOP: Classes & Objects
+16. OOP: Inheritance & Polymorphism
+17. OOP: Encapsulation & Properties
+18. OOP: Dunder (Magic) Methods
 
 **DSA Isle** (18 levels)
 1. Big-O Basics
@@ -82,26 +103,28 @@ No install needed — it's static HTML/CSS/JS, though Python Lab needs an intern
 11. Function Defaults & Multiple Return Values
 12. Basic Statistics in R
 
-This topic list (and the ordering) is loosely modeled on the standard DSA curriculum at [tutorialspoint.com/data_structures_algorithms](https://www.tutorialspoint.com/data_structures_algorithms/index.htm), scoped to the topics a strong first course covers, in both a visual/interactive form (DSA Isle) and as real, tested code (Python Lab). That tutorial goes further still (AVL/Red-Black/B-Trees, greedy algorithms beyond knapsack, network flow, tries beyond the basics, approximation/randomized algorithms) — a good next stop once all 43 levels here feel solid.
+The DSA/Python Lab topic list (and ordering) is loosely modeled on the standard curriculum at [tutorialspoint.com/data_structures_algorithms](https://www.tutorialspoint.com/data_structures_algorithms/index.htm), scoped to the topics a strong first course covers. That tutorial goes further still (AVL/Red-Black/B-Trees, greedy algorithms beyond knapsack, network flow, tries beyond the basics, approximation/randomized algorithms) — a good next stop once all 73 levels here feel solid.
 
 Levels within each track unlock in order, so the ideas build on each other. Progress is per-browser (not synced anywhere), so use the same browser/device to keep your streak.
 
 ## Project structure
 
 ```
-index.html            shell + layout, loads Pyodide from jsdelivr's CDN
-css/style.css          all styling
-js/engine.js           save/load state, XP, rank, streak logic
-js/components.js       small DOM helpers (quiz renderer, reorder challenge, code blocks)
-js/pyrunner.js         Pyodide loader + Python test runner + code-editor UI component
-js/dsa-levels.js       the 18 DSA Isle levels
-js/code-levels.js      the 25 Python Lab levels
-js/r-levels.js         the 12 R Harbor levels
-js/app.js              navigation (dashboard/track/level), XP/quiz flow
+index.html                 shell + layout, loads Pyodide from jsdelivr's CDN
+css/style.css               all styling
+js/engine.js                save/load state, XP, rank, streak logic
+js/components.js            small DOM helpers (quiz renderer, reorder challenge, code blocks)
+js/pyrunner.js               Pyodide loader + Python test runner + code-editor UI component
+js/diagrams.js               small inline-SVG diagram toolkit used in Theory sections
+js/dsa-levels.js             the 18 DSA Isle levels
+js/code-levels.js            the 25 Python Lab levels
+js/python-core-levels.js     the 18 Python Core levels
+js/r-levels.js               the 12 R Harbor levels
+js/app.js                    navigation (dashboard/track/level), XP/quiz flow, theory rendering
 ```
 
-To add an interactive DSA/R level, push an object with `{ id, track, title, concept, xp, intro, mount(root, onTaskDone), quiz }` onto `DSA_LEVELS` or `R_LEVELS`. To add a Python Lab level, push `{ id, track: 'py', title, concept, xp, intro, starterCode, tests: [{ description, code }], mount, quiz }` onto `CODE_LEVELS` — `mount` just needs to call `renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone)`. Each test's `code` is a Python snippet that should raise `AssertionError` on failure; the runner reports pass/fail/error per test.
+To add an interactive DSA/R level, push an object with `{ id, track, title, concept, xp, intro, mount(root, onTaskDone), quiz }` onto `DSA_LEVELS` or `R_LEVELS`. To add a tested-code level (Python Lab or Python Core), push `{ id, track, title, concept, xp, intro, theory, starterCode, tests: [{ description, code }], mount, quiz }` — `mount` just needs to call `renderCodeChallenge(root, { starterCode: this.starterCode, tests: this.tests }, onTaskDone)`. Each test's `code` is a Python snippet that should raise `AssertionError` on failure; the runner reports pass/fail/error per test. The optional `theory` field (any level, any track) renders as its own section above "Try it" — build diagrams for it with the small `dBox`/`dCircle`/`dText`/`dArrow`/`dWrap` helpers in `js/diagrams.js`.
 
 ## Why this approach
 
-Neither DSA, Python, nor R clicks from reading alone — they're muscle-memory subjects. This app keeps every explanation short and puts the mechanics (shifting an array, chaining a hash collision, writing and running actual code, subsetting a vector) in your hands immediately, so the theory has something to attach to before the semester's pace picks up.
+Neither Python, DSA, nor R clicks from reading alone — they're muscle-memory subjects. This app pairs a real explanation (with a picture, where one clarifies the idea) with something you do immediately after — writing code that gets graded, or manipulating the structure directly — so the theory has something to attach to before the semester's pace picks up.

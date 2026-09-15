@@ -1,4 +1,5 @@
 const TRACKS = [
+  { id: 'pycore', label: 'Python Core', tagClass: 'pycore', levels: PYTHON_CORE_LEVELS, blurb: 'Python itself, from variables to object-oriented programming. Full theory with diagrams, then real code that gets tested automatically.' },
   { id: 'dsa', label: 'DSA Isle', tagClass: 'dsa', levels: DSA_LEVELS, blurb: 'Data structures and algorithms, learned by pushing, popping, inserting, and searching things yourself.' },
   { id: 'py', label: 'Python Lab', tagClass: 'py', levels: CODE_LEVELS, blurb: 'The same core algorithms, but now you write real Python. Every level runs your code against automated tests and tells you exactly what passed or failed.' },
   { id: 'r', label: 'R Harbor', tagClass: 'r', levels: R_LEVELS, blurb: 'R fundamentals, learned by building vectors, subsetting data, and querying data frames yourself.' },
@@ -117,8 +118,8 @@ function renderDashboard(content) {
   const hero = h('div', { class: 'hero' });
   hero.appendChild(h('h1', {}, resume ? 'Ready to keep learning?' : 'You\'ve completed every level!'));
   hero.appendChild(h('p', {}, resume
-    ? 'Pick up right where you left off, or browse a world on the left. DSA Isle and R Harbor teach by interacting; Python Lab has you write real Python that gets graded automatically, right or wrong.'
-    : 'Both DSA Isle and R Harbor are fully cleared. Replay any level any time — or tell your dev to add more.'));
+    ? 'Pick up right where you left off, or browse a world on the left. Python Core and R Harbor teach with full theory and diagrams; DSA Isle teaches by interacting; Python Lab and Python Core both grade real code automatically, right or wrong.'
+    : 'Every track is fully cleared. Replay any level any time — or tell your dev to add more.'));
   const btnRow = h('div', { class: 'btn-row' });
   if (resume) {
     const resumeBtn = h('button', { class: 'btn primary' }, 'Resume last level');
@@ -258,6 +259,13 @@ function renderLevelPage(content, trackId, idx) {
   const intro = h('div', { class: 'level-intro' });
   intro.innerHTML = level.intro;
   stage.appendChild(intro);
+
+  if (level.theory) {
+    stage.appendChild(h('div', { class: 'section-title' }, 'Theory'));
+    const theory = h('div', { class: 'theory-block' });
+    theory.innerHTML = level.theory;
+    stage.appendChild(theory);
+  }
 
   if (Store.isComplete(level.id)) {
     stage.appendChild(h('div', { class: 'hint-line' }, 'You\'ve already completed this level — feel free to replay it, no extra XP this time.'));
