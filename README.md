@@ -19,7 +19,9 @@ No install needed — it's static HTML/CSS/JS, though Python Lab needs an intern
 
 ## What's covered
 
-**DSA Isle**
+**55 levels total** — enough to fill a full semester's worth of study sessions, not an afternoon.
+
+**DSA Isle** (18 levels)
 1. Big-O Basics
 2. Arrays
 3. Stacks & Queues
@@ -30,8 +32,16 @@ No install needed — it's static HTML/CSS/JS, though Python Lab needs an intern
 8. Binary Search
 9. Graphs: Breadth-First Search
 10. Hash Tables
+11. Doubly Linked Lists
+12. Heaps (Priority Queues)
+13. Balanced Trees: Why Rotate?
+14. Sorting: Quick Sort (Partition)
+15. Dijkstra's Shortest Path
+16. Topological Sort
+17. Union-Find (Disjoint Sets)
+18. Dynamic Programming: 0/1 Knapsack
 
-**Python Lab** (write real code, tested automatically)
+**Python Lab** (25 levels — write real code, tested automatically)
 1. Linear Search
 2. Binary Search
 3. Bubble Sort
@@ -47,16 +57,32 @@ No install needed — it's static HTML/CSS/JS, though Python Lab needs an intern
 13. Recursive Fibonacci
 14. Dynamic Programming: Memoized Fibonacci
 15. Build a Hash Map (chaining)
+16. Quick Sort
+17. Build a Min-Heap
+18. Counting Sort
+19. Doubly Linked List
+20. Dijkstra's Shortest Path
+21. Topological Sort (Kahn's algorithm)
+22. Union-Find (Disjoint Set)
+23. Dynamic Programming: 0/1 Knapsack
+24. Dynamic Programming: Longest Common Subsequence
+25. Trie (Prefix Tree)
 
-**R Harbor**
+**R Harbor** (12 levels)
 1. Variables & Vectors
 2. Vectorized Thinking
 3. Indexing & Subsetting
 4. Data Frames
 5. Functions & Control Flow
 6. Apply Family & Quick Stats
+7. Lists
+8. String Manipulation
+9. Matrices
+10. Control Flow: while, repeat, next
+11. Function Defaults & Multiple Return Values
+12. Basic Statistics in R
 
-This topic list (and the ordering) is loosely modeled on the standard DSA curriculum at [tutorialspoint.com/data_structures_algorithms](https://www.tutorialspoint.com/data_structures_algorithms/index.htm), scoped down to the core topics a first course actually needs. That tutorial goes much further (AVL/Red-Black/B-Trees, Dijkstra, greedy algorithms, 0/1 knapsack, tries, disjoint sets, and more) — a good next stop once these fundamentals feel solid.
+This topic list (and the ordering) is loosely modeled on the standard DSA curriculum at [tutorialspoint.com/data_structures_algorithms](https://www.tutorialspoint.com/data_structures_algorithms/index.htm), scoped to the topics a strong first course covers, in both a visual/interactive form (DSA Isle) and as real, tested code (Python Lab). That tutorial goes further still (AVL/Red-Black/B-Trees, greedy algorithms beyond knapsack, network flow, tries beyond the basics, approximation/randomized algorithms) — a good next stop once all 43 levels here feel solid.
 
 Levels within each track unlock in order, so the ideas build on each other. Progress is per-browser (not synced anywhere), so use the same browser/device to keep your streak.
 
@@ -68,9 +94,9 @@ css/style.css          all styling
 js/engine.js           save/load state, XP, rank, streak logic
 js/components.js       small DOM helpers (quiz renderer, reorder challenge, code blocks)
 js/pyrunner.js         Pyodide loader + Python test runner + code-editor UI component
-js/dsa-levels.js       the 10 DSA Isle levels
-js/code-levels.js      the 15 Python Lab levels
-js/r-levels.js         the 6 R Harbor levels
+js/dsa-levels.js       the 18 DSA Isle levels
+js/code-levels.js      the 25 Python Lab levels
+js/r-levels.js         the 12 R Harbor levels
 js/app.js              navigation (dashboard/track/level), XP/quiz flow
 ```
 
