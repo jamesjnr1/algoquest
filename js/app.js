@@ -41,9 +41,18 @@ function navigate(next) {
   window.scrollTo(0, 0);
 }
 
+function totalXpPossible() {
+  return TRACKS.reduce((sum, t) => sum + t.levels.reduce((s, l) => s + l.xp, 0), 0);
+}
+
 function renderTopChip() {
-  document.getElementById('xp-value').textContent = Store.state.xp;
-  document.getElementById('rank-badge').textContent = rankFor(Store.state.xp);
+  const xp = Store.state.xp;
+  document.getElementById('xp-value').textContent = xp;
+  document.getElementById('rank-badge').textContent = rankFor(xp);
+  document.getElementById('streak-num').textContent = currentStreak(Store.state.streakDates);
+  const pct = Math.min(1, xp / totalXpPossible());
+  const circumference = 138.2;
+  document.getElementById('xp-arc').style.strokeDashoffset = (circumference * (1 - pct)).toFixed(1);
 }
 
 function renderSideNav() {
@@ -90,6 +99,7 @@ function levelCard(trackId, idx) {
   body.appendChild(tagsRow);
   body.appendChild(h('h3', {}, level.title));
   body.appendChild(h('div', { class: 'meta' }, unlocked ? level.concept : 'Complete the level before this one to unlock.'));
+  if (complete) body.appendChild(h('div', { class: 'lvl-card-stars' }, starString(Store.starsFor(level.id))));
   const footer = h('div', { class: 'lvl-card-footer' });
   footer.appendChild(h('span', { class: 'xp' }, `+${level.xp} XP`));
   const status = complete ? h('span', { class: 'status done' }, 'Completed ✓')
@@ -235,9 +245,37 @@ function renderTrackPage(content, trackId) {
   header.appendChild(h('div', { class: 'track-progress-label' }, `${done} of ${t.levels.length} levels complete`));
   content.appendChild(header);
 
-  const grid = h('div', { class: 'card-grid' });
-  t.levels.forEach((lvl, i) => grid.appendChild(levelCard(trackId, i)));
-  content.appendChild(grid);
+  const path = h('div', { class: 'path ' + t.tagClass });
+  t.levels.forEach((lvl, i) => path.appendChild(levelNode(trackId, i)));
+  content.appendChild(path);
+}
+
+// ---------- Level node (winding path on the track page) ----------
+function levelNode(trackId, idx) {
+  const track = trackMeta(trackId);
+  const level = track.levels[idx];
+  const unlocked = isUnlocked(trackId, idx);
+  const complete = Store.isComplete(level.id);
+  const side = idx % 2 === 0 ? 'L' : 'R';
+
+  const row = h('div', { class: `node-row ${side}` });
+  const node = h('button', {
+    class: 'node' + (unlocked ? ' unlocked' : ' locked') + (complete ? ' done' : ''),
+  });
+  if (unlocked) node.addEventListener('click', () => navigate({ type: 'level', trackId, idx }));
+  else node.disabled = true;
+
+  const badge = h('div', { class: 'node-badge' }, complete ? '✓' : String(idx + 1));
+  if (complete) badge.appendChild(h('span', { class: 'node-stars' }, starString(Store.starsFor(level.id))));
+  node.appendChild(badge);
+
+  const info = h('div', { class: 'node-info' });
+  info.appendChild(h('div', { class: 't' }, level.title));
+  info.appendChild(h('div', { class: 's' }, unlocked ? level.concept : 'Locked'));
+  node.appendChild(info);
+
+  row.appendChild(node);
+  return row;
 }
 
 // ---------- Level page ----------
@@ -271,6 +309,32 @@ function renderLevelPage(content, trackId, idx) {
     stage.appendChild(h('div', { class: 'hint-line' }, 'You\'ve already completed this level — feel free to replay it, no extra XP this time.'));
   }
 
+  const hintText = LEVEL_HINTS[level.id];
+  const ref = LEVEL_REFERENCES[level.id];
+  if (hintText || ref) {
+    const helpRow = h('div', { class: 'help-row' });
+    if (hintText) {
+      const hintBtn = h('button', { class: 'btn small' }, 'Stuck? Show a hint');
+      const hintBox = h('div', { class: 'hint-box' });
+      hintBox.textContent = hintText;
+      hintBox.style.display = 'none';
+      hintBtn.addEventListener('click', () => {
+        const showing = hintBox.style.display !== 'none';
+        hintBox.style.display = showing ? 'none' : 'block';
+        hintBtn.textContent = showing ? 'Stuck? Show a hint' : 'Hide hint';
+      });
+      helpRow.appendChild(hintBtn);
+      stage.appendChild(helpRow);
+      stage.appendChild(hintBox);
+    }
+    if (ref) {
+      const refLine = h('div', { class: 'ref-line' });
+      refLine.appendChild(h('span', {}, 'Learn more: '));
+      refLine.appendChild(h('a', { href: ref.url, target: '_blank', rel: 'noopener noreferrer', class: 'ref-link' }, `${ref.label} on TutorialsPoint ↗`));
+      stage.appendChild(refLine);
+    }
+  }
+
   stage.appendChild(h('div', { class: 'section-title' }, 'Try it'));
   const taskRoot = h('div', {});
   stage.appendChild(taskRoot);
@@ -282,17 +346,18 @@ function renderLevelPage(content, trackId, idx) {
     stage.appendChild(h('div', { class: 'section-title' }, 'Quick check'));
     const quizRoot = h('div', {});
     stage.appendChild(quizRoot);
-    renderQuiz(quizRoot, level.quiz, () => onQuizDone(stage, trackId, idx, level));
+    renderQuiz(quizRoot, level.quiz, (stars) => onQuizDone(stage, trackId, idx, level, stars));
   }
   level.mount(taskRoot, onTaskDone);
 
   content.appendChild(stage);
 }
 
-function onQuizDone(stage, trackId, idx, level) {
-  const awarded = Store.complete(level.id, level.xp);
+function onQuizDone(stage, trackId, idx, level, stars) {
+  const awarded = Store.complete(level.id, level.xp, stars);
   renderTopChip();
   const banner = successBanner(awarded ? `Level complete! +${level.xp} XP` : 'Nice review! (Already completed — no extra XP)');
+  banner.appendChild(h('div', { class: 'banner-stars' }, starString(stars)));
   const levels = levelsForTrack(trackId);
   const btnRow = h('div', { style: 'display:flex;gap:10px;' });
   if (idx + 1 < levels.length) {

@@ -16,6 +16,16 @@ function h(tag, attrs = {}, children = []) {
 
 function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
 
+function starsForWrongCount(wrongCount) {
+  if (wrongCount === 0) return 3;
+  if (wrongCount <= 2) return 2;
+  return 1;
+}
+
+function starString(stars) {
+  return '★'.repeat(stars) + '☆'.repeat(3 - stars);
+}
+
 // Simple syntax highlight for R / pseudocode snippets shown in <pre class="code-block">
 function codeBlock(src, lang) {
   const kws = lang === 'r'
@@ -41,6 +51,7 @@ function inlineCode(text) {
 // Renders a one-question-at-a-time quiz. questions: [{q, options:[...], answer: idx, explain}]
 function renderQuiz(root, questions, onDone) {
   let idx = 0;
+  let wrongCount = 0;
   function renderQ() {
     clear(root);
     const q = questions[idx];
@@ -58,7 +69,7 @@ function renderQuiz(root, questions, onDone) {
       if (nextBtn.disabled) return;
       nextBtn.disabled = true;
       idx++;
-      if (idx >= questions.length) onDone();
+      if (idx >= questions.length) onDone(starsForWrongCount(wrongCount));
       else renderQ();
     });
     q.options.forEach((opt, i) => {
@@ -68,6 +79,7 @@ function renderQuiz(root, questions, onDone) {
         if (answered) return;
         answered = true;
         const correct = i === q.answer;
+        if (!correct) wrongCount++;
         btn.classList.add(correct ? 'correct' : 'wrong');
         if (!correct) optsWrap.children[q.answer].classList.add('correct');
         explainBox.textContent = q.explain || '';

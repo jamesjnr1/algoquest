@@ -9,7 +9,7 @@ Four tracks, covering theory and practice differently:
 - **Python Lab** — the same core algorithms as DSA Isle, but now as real, tested Python: quick sort, a hand-built heap, Dijkstra, a trie, dynamic programming, and more.
 - **R Harbor** — predict, build, and query real R snippets: vectors, 1-based indexing, data frames, matrices, basic statistics.
 
-Every level ends with a short "Quick check" to lock in the idea, then awards XP. XP and completed levels are saved in `localStorage`, so you can close the tab and pick up where you left off.
+Every level ends with a short "Quick check" to lock in the idea, then awards XP — and 1 to 3 stars, based on how many attempts the check took, encouraging a replay if you want to nail it clean. Every level also has a "Stuck? Show a hint" toggle and a "Learn more" link straight to the matching [tutorialspoint.com](https://www.tutorialspoint.com/) page, so help is never more than one click away. Each track page shows its levels as a winding path (not just a plain grid) with a streak/XP gauge up top — XP, streak, stars, and completed levels are all saved in `localStorage`, so you can close the tab and pick up where you left off.
 
 ## Play it
 
@@ -116,6 +116,7 @@ js/engine.js                save/load state, XP, rank, streak logic
 js/components.js            small DOM helpers (quiz renderer, reorder challenge, code blocks)
 js/pyrunner.js               Pyodide loader + Python test runner + code-editor UI component
 js/diagrams.js               small inline-SVG diagram toolkit used in Theory sections
+js/hints-references.js       per-level "stuck?" hints + tutorialspoint.com reference links
 js/dsa-levels.js             the 18 DSA Isle levels
 js/code-levels.js            the 25 Python Lab levels
 js/python-core-levels.js     the 18 Python Core levels

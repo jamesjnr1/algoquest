@@ -6,7 +6,7 @@
 <title>AlgoQuest — Learn DSA, Python &amp; R by Doing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="css/style.css" />
 <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
 </head>
@@ -24,7 +24,20 @@
     <main class="main">
       <div class="topbar">
         <input id="search-input" class="search-input" type="text" placeholder="Search a level…" />
-        <div class="xp-chip"><strong id="xp-value">0</strong> XP &nbsp;·&nbsp; <span id="rank-badge">Novice</span></div>
+        <div class="gauge-wrap">
+          <div class="streak">
+            <span class="n" id="streak-num">0</span>
+            <span class="l">day streak</span>
+          </div>
+          <div class="gauge">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle class="bg" cx="26" cy="26" r="22" />
+              <circle class="fg" id="xp-arc" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" />
+            </svg>
+            <div class="num" id="xp-value">0</div>
+          </div>
+          <div class="rank-pill" id="rank-badge">Novice</div>
+        </div>
       </div>
       <div id="content" class="content"></div>
     </main>
@@ -36,6 +49,7 @@
   <script src="js/components.js"></script>
   <script src="js/pyrunner.js"></script>
   <script src="js/diagrams.js"></script>
+  <script src="js/hints-references.js"></script>
   <script src="js/dsa-levels.js"></script>
   <script src="js/r-levels.js"></script>
   <script src="js/code-levels.js"></script>
