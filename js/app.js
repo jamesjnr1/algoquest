@@ -283,16 +283,18 @@ function renderLevelPage(content, trackId, idx) {
   const t = trackMeta(trackId);
   const level = t.levels[idx];
 
-  const back = h('button', { class: 'breadcrumb' }, `← Back to ${t.label}`);
+  const back = h('button', { class: 'breadcrumb' }, `← ${t.label}`);
   back.addEventListener('click', () => navigate({ type: 'track', trackId }));
   content.appendChild(back);
 
   const stage = h('div', { class: 'stage' });
 
   const header = h('div', { class: 'level-header' });
-  header.appendChild(h('span', { class: 'tag ' + t.tagClass }, level.concept));
+  header.appendChild(h('div', { class: 'level-meta' }, `Level ${idx + 1} of ${t.levels.length} · ${t.label}`));
   header.appendChild(h('h2', {}, level.title));
+  header.appendChild(h('div', { class: 'level-concept ' + t.tagClass }, level.concept));
   stage.appendChild(header);
+  stage.appendChild(h('hr', { class: 'level-rule' }));
 
   const intro = h('div', { class: 'level-intro' });
   intro.innerHTML = level.intro;
