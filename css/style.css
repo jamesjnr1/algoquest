@@ -243,8 +243,12 @@ code, .mono, .inline-code, pre.code-block, .code-editor,
 .track-progress-fill { background: var(--accent); height: 100%; border-radius: 6px; }
 .track-progress-label { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
 
-.breadcrumb { background: none; border: none; color: var(--accent); font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 18px; }
-.breadcrumb:hover { text-decoration: underline; }
+.breadcrumb {
+  background: none; border: none; color: var(--muted); cursor: pointer; padding: 0; margin-bottom: 22px;
+  font-family: "JetBrains Mono", "SF Mono", Consolas, monospace; font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.breadcrumb:hover { color: var(--accent-dark); text-decoration: underline; }
 
 .empty-state { color: var(--muted); font-size: 0.9rem; padding: 20px 0; }
 
@@ -253,16 +257,38 @@ code, .mono, .inline-code, pre.code-block, .code-editor,
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 28px;
+  padding: 32px;
 }
 
-.level-header { margin-bottom: 18px; }
-.level-header h2 { margin: 6px 0 0; font-size: 1.3rem; }
-.level-intro { color: var(--muted); line-height: 1.65; margin: 10px 0 22px; max-width: 720px; font-size: 0.92rem; }
+.level-header { margin-bottom: 0; }
+.level-meta {
+  font-family: "JetBrains Mono", "SF Mono", Consolas, monospace; font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+}
+.level-header h2 { margin: 0 0 10px; font-size: 2.1rem; line-height: 1.16; font-weight: 600; }
+.level-concept {
+  font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 500;
+  font-size: 1.08rem; margin: 0; color: var(--muted);
+}
+.level-concept.dsa { color: var(--dsa-color); }
+.level-concept.r { color: var(--r-color); }
+.level-concept.py { color: var(--py-color); }
+.level-concept.pycore { color: var(--pycore-color); }
 
-.section-title { font-weight: 600; margin: 22px 0 10px; color: var(--text); font-size: 0.98rem; }
+.level-rule { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+.level-intro { color: var(--muted); line-height: 1.65; margin: 0 0 22px; max-width: 720px; font-size: 0.92rem; }
+
+.section-title {
+  font-family: "JetBrains Mono", "SF Mono", Consolas, monospace; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.72rem; color: var(--muted);
+  margin: 28px 0 16px; padding-top: 18px; border-top: 1px solid var(--border);
+}
 
 .help-row { margin-top: 16px; }
+.help-row .btn.small {
+  font-family: "JetBrains Mono", "SF Mono", Consolas, monospace; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.72rem;
+}
 .hint-box { margin-top: 10px; padding: 12px 14px; background: var(--accent-tint); border: 1px solid var(--accent); border-radius: 9px; color: var(--accent-dark); font-size: 0.86rem; line-height: 1.5; }
 .ref-line { margin-top: 10px; font-size: 0.82rem; color: var(--muted); }
 .ref-link { color: var(--accent-dark); font-weight: 600; text-decoration: none; }

@@ -33,9 +33,9 @@ function codeBlock(src, lang) {
     : /\b(function|if|else|for|while|return|let|const|var|break|continue)\b/g;
   let out = src
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"([^"]*)"/g, '<span class="str">"$1"</span>')
     .replace(/(#.*$)/gm, '<span class="cm">$1</span>')
     .replace(/(\/\/.*$)/gm, '<span class="cm">$1</span>')
-    .replace(/"([^"]*)"/g, '<span class="str">"$1"</span>')
     .replace(/\b(\d+\.?\d*)\b/g, '<span class="num">$1</span>')
     .replace(kws, '<span class="kw">$1</span>');
   const pre = h('pre', { class: 'code-block' });
